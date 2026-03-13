@@ -1,58 +1,71 @@
-body{
-    background-color: rgb(215, 248, 250);
-    margin:0;
-    font-family: Arial;
-    text-align: center;
+.barra-acoes{
+    display: flex;
+    gap: 15px;
     align-items: center;
+    margin-bottom: 20px;
+    margin-left: 500px;
+    margin-top: 15px;
 }
 
-.opcoes{
-    width:220px;
-    height:100vh;
-    color: #34495e;
-    background:#66e9de;
-    position:fixed;
-    padding:20px;
-    text-align: center;
-}
-
-.nao-ativo{
-    display:block;
+.btn{
+    background-color: #34495e;
     color: rgb(215, 248, 250);
-    padding:10px;
-    text-decoration:none;
-    text-align: center;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid #34495e;
+    font-size: 15px;
+}
+
+.pesquisa{
     background-color: #34495e;
-    margin-bottom: 10px;
-    border-radius: 5px;
+    color: rgb(215, 248, 250);
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    width: 200px;
+    border: 2px solid #34495e;
+}
+
+.pesquisa, .btn{
     transition: 0.3s;
 }
 
-.menu-ativo{
-    display:block;
-    color: #34495e;
-    padding:10px;
-    text-decoration:none;
-    text-align: center;
+.btn:hover{
     background-color: rgb(215, 248, 250);
-    margin-bottom: 10px;
-    border-radius: 5px;
-    transition: 0.3s;
-}
-
-.nao-ativo:hover{
-    background:rgb(215, 248, 250);
     color: #34495e;
+    border: 2px solid #34495e;
 }
 
-.menu-ativo:hover{
-    color:rgb(215, 248, 250);
-    background-color: #34495e;
+.btn i{
+    color:#66e9de;
 }
 
-.opcoes h2{
-    font-family: 'Montserrat', sans-serif;
+.pesquisa:hover{
+    background-color: rgb(215, 248, 250);
+    color: #34495e;
+    border: 2px solid #34495e;
 }
+
+.pesquisa:focus{
+    border: 2px solid #34495e;
+    outline: none;
+}
+
+.campo-pesquisa{
+    position: relative;
+    display: inline-block;
+}
+
+.campo-pesquisa i{
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color:#66e9de;
+}
+
 
 
 

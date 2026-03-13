@@ -8,45 +8,57 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
   <div class="opcoes">
     <h2>OPÇÕES</h2>
-    <a href="index.html" class="menu-ativo">Dashboard</a>
-    <a href="clientes.html" class="nao-ativo">Clientes/Planos</a>
-    <a href="pagamentos.html" class="nao-ativo">Pagamentos</a>
-    <a href="importacao.html" class="nao-ativo">Importar/Exportar</a>
+    <a class="menu-ativo" href="index.html">
+    <i class="fa-solid fa-chart-column"></i> Dashboard
+    </a>
+
+    <a class="nao-ativo" href="clientes.html">
+    <i class="fa-solid fa-users"></i> Clientes/Planos
+    </a>
+
+    <a class="nao-ativo" href="pagamentos.html">
+    <i class="fa-solid fa-credit-card"></i> Pagamentos
+    </a>
+
+    <a class="nao-ativo" href="importacao.html">
+    <i class="fa-solid fa-folder-open"></i> Importar/Exportar
+    </a>
   </div>
 
 <h2 class="titulo">DASHBOARD</h2>
 <div class="cards">
   <div class="card">
-    <h3>Total de Clientes</h3>
+    <p>Total de Clientes</p>
     <p id="totalClientes" class="valor">0</p>
   </div>
   
   <div class="card">
-    <h3>Ativos</h3>
+    <p>Clientes Ativos</p>
     <p id="ativos" class="valor">0</p>
   </div>
 
   <div class="card">
-    <h3>Adimplentes</h3>
+    <p>Adimplentes</p>
     <p id="adimplentes" class="valor">0</p>
   </div>
   
   <div class="card">
-    <h3>Inadimplentes</h3>
+    <p>Clientes Inadimplentes</p>
     <p id="inadimplentes" class="valor">0</p>
   </div>
 
   <div class="card">
-    <h3>Inativos</h3>
+    <p>Clientes Inativos</p>
     <p id="inativos" class="valor">0</p>
   </div>
 
   <div class="card">
-    <h3>Próximo Vencimento</h3>
+    <p>Próximo Vencimento</p>
     <p id="vencimento" class="valor">0</p>
   </div>
 </div>
@@ -89,7 +101,6 @@
     <div class="acoes">
         <button>Editar</button>
     </div>
-
 </div>
 </body>
 </html>
