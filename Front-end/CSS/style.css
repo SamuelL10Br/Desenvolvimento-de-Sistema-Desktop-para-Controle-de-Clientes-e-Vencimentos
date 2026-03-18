@@ -1,5 +1,10 @@
 body{
-    background-color: rgb(215, 248, 250);
+    background-color: rgb(215, 248, 250);    
+    background: url('../Imagens/fundo5.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     margin:0;
     font-family: Arial;
     text-align: center;
@@ -10,7 +15,7 @@ body{
     width:220px;
     height:100vh;
     color: #34495e;
-    background:#66e9de;
+    background:#81cafc;
     position:fixed;
     padding:20px;
     text-align: center;
@@ -38,7 +43,7 @@ body{
 .opcoes a i{
     position: absolute;
     left: 12px;
-    color:#66e9de;
+    color:#81cafc;
 }
 
 .opcoes h2{

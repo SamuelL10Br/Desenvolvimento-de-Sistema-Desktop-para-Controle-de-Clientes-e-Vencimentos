@@ -1,5 +1,10 @@
 body{
     background-color: rgb(215, 248, 250);
+    background: url('../Imagens/fundo5.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     margin:0;
     font-family: Arial;
     text-align: center;
@@ -10,7 +15,7 @@ body{
     width:220px;
     height:100vh;
     color: #34495e;
-    background:#66e9de;
+    background:#81cafc;
     position:fixed;
     padding:20px;
     text-align: center;
@@ -44,7 +49,7 @@ body{
 .nao-ativo i{
     position: absolute;
     left: 12px;
-    color:#66e9de;
+    color:#81cafc;
 }
 
 .menu-ativo{
@@ -68,7 +73,7 @@ body{
 .menu-ativo i{
     position: absolute;
     left: 12px;
-    color:#66e9de;
+    color:#81cafc;
 }
 
 .nao-ativo:hover{
@@ -81,7 +86,13 @@ body{
     background-color: #34495e;
 }
 
-
+.conteudo{
+    margin-left: 250px; /* espaço da barra lateral */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* centraliza horizontalmente */
+    padding-top: 40px;
+}
 .titulo{
     font-family: 'Montserrat', sans-serif;
     margin: 0;
@@ -90,16 +101,15 @@ body{
     text-align: center;
     color: #34495e;
     font-size: 22px;
-    margin-left: 300px; 
     margin-top: 0px;
 }
 
 .cards{
     display: flex;
-    gap: 30px;
+    gap: 25px;
     flex-wrap: wrap;
     justify-content: center;
-    margin-left: 300px; 
+    margin-bottom: 30px;
     margin-top: 15px;
 }
 
@@ -130,8 +140,8 @@ body{
     gap: 15px;
     background: #34495e;
     padding: 10px;
+    justify-content: center;
     border-radius: 10px;
-    margin-left: 400px;
     margin-top: 15px; 
     width: fit-content;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -151,7 +161,7 @@ body{
 }
 
 .coluna h4{
-    background: #66e9de;
+    background: #81cafc;
     border-radius: 5px;
     margin-bottom: 10px;
     color: #34495e;
@@ -166,7 +176,7 @@ body{
 
 .acoes button{
     color: #34495e;
-    background-color:#66e9de;
+    background-color:#81cafc;
     border: none;
     padding: 8px 15px;
     border-radius: 8px;
