@@ -1,3 +1,4 @@
+/* Estilização do corpo da página */
 body{
     background-color: rgb(215, 248, 250);
     background: url('../Imagens/fundo5.png');
@@ -35,7 +36,7 @@ body{
     background-color: #81cafc;
 }
 
-
+/* Estilização da barra lateral */
 .opcoes{
     width:220px;
     height:100vh;
@@ -53,6 +54,7 @@ body{
     text-align: center;
 }
 
+/* Estilização dos links inativos */
 .nao-ativo{
     display:flex;
     color: rgb(215, 248, 250);
@@ -77,6 +79,7 @@ body{
     color:#81cafc;
 }
 
+/* Estilização dos links ativos */
 .menu-ativo{
     display:flex;
     color: #34495e;
@@ -111,6 +114,7 @@ body{
     background-color: #34495e;
 }
 
+/* Estilização do conteúdo da página */
 .conteudo{
     margin-left: 250px; /* espaço da barra lateral */
     display: flex;
@@ -119,6 +123,7 @@ body{
     padding-top: 40px;
     margin-bottom: 20px;
 }
+
 .titulo{
     font-family: 'Montserrat', sans-serif;
     margin: 0;
@@ -130,6 +135,7 @@ body{
     margin-top: 0px;
 }
 
+/* Estilização dos cartões de informações resumidas */
 .cards{
     display: flex;
     gap: 25px;
@@ -161,6 +167,7 @@ body{
     margin-top: 0px;
 }
 
+/* Estilização da tabela de clientes */
 .tabela-clientes{
     background: #34495e;
     padding: 10px;
@@ -168,7 +175,7 @@ body{
     margin-top: 15px; 
     margin-bottom: 20px;
     width: fit-content;
-    max-width: 80%;
+    max-width: 90%;
     border-collapse: separate;
     border-spacing: 5px;
     display: block;

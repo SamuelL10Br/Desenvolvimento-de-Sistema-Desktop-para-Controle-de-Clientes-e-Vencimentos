@@ -1,3 +1,4 @@
+/* Estilização da barra lateral */
 body{
     background-color: rgb(215, 248, 250);
     margin:0;
@@ -16,6 +17,7 @@ body{
     text-align: center;
 }
 
+/* Estilização dos links inativos */
 .nao-ativo{
     display:block;
     color: rgb(215, 248, 250);
@@ -28,6 +30,7 @@ body{
     transition: 0.3s;
 }
 
+/* Estilização do link ativo */
 .menu-ativo{
     display:block;
     color: #34495e;
