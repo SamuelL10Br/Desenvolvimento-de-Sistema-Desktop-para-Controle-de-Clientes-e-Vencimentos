@@ -10,7 +10,7 @@ body{
     width:220px;
     height:100vh;
     color: #34495e;
-    background:#66e9de;
+    background: #81cafc;
     position:fixed;
     padding:20px;
     text-align: center;
@@ -52,4 +52,45 @@ body{
 
 .opcoes h2{
     font-family: 'Montserrat', sans-serif;
+}
+
+.filtro-container{
+    position: relative;
+    display: inline-block;
+}
+
+.filtro-box{
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: rgb(215, 248, 250);
+    padding: 15px;
+    border-radius: 10px;
+    color: #34495e;
+    width: 200px;
+    z-index: 10;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+    border:#34495e solid 2px;
+}
+
+.filtro-container:hover .filtro-box{
+    display: flex;
+}
+
+/* Estilização das opções do filtro */
+.filtro-box label {
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filtro-box label:active {
+    color: #81cafc; /* Muda a cor do texto no exato momento do clique */
+}
+
+.filtro-box input[type="checkbox"] {
+    accent-color: #81cafc; /* Muda a cor da caixinha quando marcada */
+    cursor: pointer;
 }
