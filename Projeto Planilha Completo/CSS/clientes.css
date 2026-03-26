@@ -1,0 +1,131 @@
+
+.barra-acoes{
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    margin-top: 15px;
+}
+
+/* Estilização do corpo dos botões*/
+.btn{
+    background-color: #34495e;
+    color: rgb(215, 248, 250);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid #34495e;
+    font-size: 15px;
+}
+
+.btn:hover{
+    background-color: rgb(215, 248, 250);
+    color: #34495e;
+    border: 2px solid #34495e;
+}
+
+.btn i{
+    color:#81cafc;
+}
+
+/* Estilização do corpo da pesquisa*/
+.pesquisa{
+    background-color: #34495e;
+    color: rgb(215, 248, 250);
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    width: 200px;
+    border: 2px solid #34495e;
+}
+
+.pesquisa, .btn{
+    transition: 0.3s;
+}
+
+
+.pesquisa:hover{
+    background-color: rgb(215, 248, 250);
+    color: #34495e;
+    border: 2px solid #34495e;
+}
+
+.pesquisa:focus{
+    border: 2px solid #34495e;
+    outline: none;
+}
+
+.campo-pesquisa{
+    position: relative;
+    display: inline-block;
+}
+
+.campo-pesquisa i{
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color:#81cafc;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden {
+  display: none;
+}
+
+.modal-conteudo {
+  background: #ffffff;
+  width: 420px;
+  max-width: 90%;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-conteudo h2 {
+  margin-bottom: 18px;
+}
+
+.modal-conteudo label {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.modal-conteudo input,
+.modal-conteudo select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #bfc7d1;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+}
+
+.botoes-modal {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.botoes-modal button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}

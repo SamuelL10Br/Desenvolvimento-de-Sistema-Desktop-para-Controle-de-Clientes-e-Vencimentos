@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="../CSS/clientes.css">
+  <link rel="stylesheet" href="../CSS/dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <!-- Barra lateral -->
+  <div class="opcoes">
+    <h2>OPÇÕES</h2>
+    <a class="nao-ativo" href="dashboard.html">
+    <i class="fa-solid fa-chart-column"></i> Dashboard
+    </a>
+
+    <a class="menu-ativo" href="index.html">
+    <i class="fa-solid fa-users"></i> Dados dos Clientes
+    </a>
+
+    <a class="nao-ativo" href="pagamentos.html">
+    <i class="fa-solid fa-credit-card"></i> Pagamentos
+    </a>
+
+    <a class="nao-ativo" href="importacao.html">
+    <i class="fa-solid fa-folder-open"></i> Importar/Exportar
+    </a>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="conteudo">
+  <h2 class="titulo">DADOS DOS CLIENTES</h2>
+
+  <!-- Botões e barra de pesquisa -->
+  <div class="barra-acoes">
+
+    <button class="btn">
+    <i class="fa-solid fa-user-plus"></i> Novo Cliente
+    </button>
+
+    <div class="campo-pesquisa">
+    <input type="text" class="pesquisa" placeholder="Pesquisar Cliente - nome/CPF">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    </div>
+
+    <button class="btn">
+    <i class="fa-solid fa-pen"></i> Editar
+    </button>
+
+  </div>
+
+  <!-- Tabela com dados dos clientes -->
+  <table class="tabela-clientes">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Telefone/Whatsapp</th>
+            <th>Endereço</th>
+            <th>E-mail</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>João Pereira de Araújo Gomes</td>
+            <td>121.456.4789-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua da Pedra, 123, Centro</td>
+            <td>fulano@gmail.com</td>
+        </tr>
+        <tr>
+            <td>Maria Santa da Costa</td>
+            <td>121.456.4789-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua do Sol, 456, Jardim Botânico</td>
+            <td>mariazinha@gmail.com</td>
+        </tr>
+        <tr>
+            <td>Pedro Hugo Santos</td>
+            <td>121.456.4789-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua da Pedra, 123, Centro</td>
+            <td>fulano@gmail.com</td>
+        </tr>
+        <tr>
+            <td>Joana Maria Silva</td>
+            <td>851.566.427-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua do Sol, 456, Jardim Botânico</td>
+            <td>mariazinha@gmail.com</td>
+        </tr>
+        <tr>
+            <td>João Pereira de Araújo Gomes</td>
+            <td>121.456.4789-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua da Pedra, 123, Centro</td>
+            <td>fulano@gmail.com</td>
+        </tr>
+        <tr>
+            <td>Maria Santa da Costa</td>
+            <td>121.456.4789-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua do Sol, 456, Jardim Botânico</td>
+            <td>mariazinha@gmail.com</td>
+        </tr>
+        <tr>
+            <td>Pedro Hugo Santos</td>
+            <td>121.456.4789-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua da Pedra, 123, Centro</td>
+            <td>fulano@gmail.com</td>
+        </tr>
+        <tr>
+            <td>Joana Maria Silva</td>
+            <td>851.566.427-85</td>
+            <td>84 99999-9999</td>
+            <td>Rua do Sol, 456, Jardim Botânico</td>
+            <td>mariazinha@gmail.com</td>
+        </tr>
+    </tbody>
+  </table>
+</body>
+</html>
