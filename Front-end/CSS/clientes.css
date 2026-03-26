@@ -1,0 +1,77 @@
+
+.barra-acoes{
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 20px;
+    margin-top: 15px;
+}
+
+/* Estilização do corpo dos botões*/
+.btn{
+    background-color: #34495e;
+    color: rgb(215, 248, 250);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 2px solid #34495e;
+    font-size: 15px;
+}
+
+.btn:hover{
+    background-color: rgb(215, 248, 250);
+    color: #34495e;
+    border: 2px solid #34495e;
+}
+
+.btn i{
+    color:#81cafc;
+}
+
+/* Estilização do corpo da pesquisa*/
+.pesquisa{
+    background-color: #34495e;
+    color: rgb(215, 248, 250);
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    width: 200px;
+    border: 2px solid #34495e;
+}
+
+.pesquisa, .btn{
+    transition: 0.3s;
+}
+
+
+.pesquisa:hover{
+    background-color: rgb(215, 248, 250);
+    color: #34495e;
+    border: 2px solid #34495e;
+}
+
+.pesquisa:focus{
+    border: 2px solid #34495e;
+    outline: none;
+}
+
+.campo-pesquisa{
+    position: relative;
+    display: inline-block;
+}
+
+.campo-pesquisa i{
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color:#81cafc;
+}
+
+
+
+
+
+
+   

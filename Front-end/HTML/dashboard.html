@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="../CSS/dashboard.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../CSS/clientes.css">
+</head>
+<body>
+  <!-- Barra lateral -->
+  <div class="opcoes">
+    <h2>OPÇÕES</h2>
+    <a class="menu-ativo" href="index.html">
+    <i class="fa-solid fa-chart-column"></i> Dashboard
+    </a>
+
+    <a class="nao-ativo" href="clientes.html">
+    <i class="fa-solid fa-users"></i> Dados dos Clientes
+    </a>
+
+    <a class="nao-ativo" href="pagamentos.html">
+    <i class="fa-solid fa-credit-card"></i> Pagamentos
+    </a>
+
+    <a class="nao-ativo" href="importacao.html">
+    <i class="fa-solid fa-folder-open"></i> Importar/Exportar
+    </a>
+  </div>
+
+<!-- Conteúdo principal -->
+<div class="conteudo">
+
+<h2 class="titulo">DASHBOARD</h2>
+
+<!-- Cartões com informações gerais -->
+<div class="cards">
+  <div class="card">
+    <p>Total de Clientes</p>
+    <p id="totalClientes" class="valor">0</p>
+  </div>
+  
+  <div class="card">
+    <p>Clientes Ativos</p>
+    <p id="ativos" class="valor">0</p>
+  </div>
+
+  <div class="card">
+    <p>Adimplentes</p>
+    <p id="adimplentes" class="valor">0</p>
+  </div>
+  
+  <div class="card">
+    <p>Clientes Inadimplentes</p>
+    <p id="inadimplentes" class="valor">0</p>
+  </div>
+
+  <div class="card">
+    <p>Clientes Inativos</p>
+    <p id="inativos" class="valor">0</p>
+  </div>
+
+  <div class="card">
+    <p>Próximo Vencimento</p>
+    <p id="vencimento" class="valor">0</p>
+  </div>
+</div>
+
+<!-- Tabela com dados gerais dos clientes -->
+<table class="tabela-clientes">
+    <thead>
+        <tr>
+            <th>Cliente</th>
+            <th>CPF</th>
+            <th>Vencimento</th>
+            <th>Status</th>
+            <th>Dias para vencer</th>        
+          </tr>
+    </thead>       
+    <tbody>
+        <tr>
+            <td>João Pereira de Araújo Gomes</td>
+            <td>121.456.4789-85</td>
+            <td>12/12/2026</td>
+            <td>Pago</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Maria Santa da Costa</td>
+            <td>121.456.4789-86</td>
+            <td>10/01/2026</td>
+            <td>Não Pago</td>
+            <td>39</td>
+        </tr>
+        <tr>
+            <td>Pedro Hugo Santos</td>
+            <td>121.456.4789-87</td>
+            <td>12/12/2026</td>
+            <td>Pago</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Joana Maria Silva</td>
+            <td>851.566.427-85</td>
+            <td>10/01/2026</td>
+            <td>Não Pago</td>
+            <td>39</td>
+        </tr>
+        <tr>
+            <td>João Pereira de Araújo Gomes</td>
+            <td>121.456.4789-85</td>
+            <td>12/12/2026</td>
+            <td>Pago</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Maria Santa da Costa</td>
+            <td>121.456.4789-86</td>
+            <td>10/01/2026</td>
+            <td>Não Pago</td>
+            <td>39</td>
+        </tr>
+        <tr>
+            <td>Pedro Hugo Santos</td>
+            <td>121.456.4789-87</td>
+            <td>12/12/2026</td>
+            <td>Pago</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Joana Maria Silva</td>
+            <td>851.566.427-85</td>
+            <td>10/01/2026</td>
+            <td>Não Pago</td>
+            <td>39</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- Botão para edição -->
+ <button class="btn">
+    <i class="fa-solid fa-pen"></i> Editar
+  </button>
+  
+</div>
+</body>
+</html>
