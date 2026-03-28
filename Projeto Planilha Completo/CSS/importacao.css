@@ -94,3 +94,46 @@ body{
     accent-color: #81cafc; /* Muda a cor da caixinha quando marcada */
     cursor: pointer;
 }
+
+.filtro-box {
+  display: none;
+}
+
+.filtro-box.mostrar-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exportar-container {
+  position: relative;
+}
+
+.exportar-box {
+  display: none;
+  position: absolute;
+  top: 55px;
+  left: 0;
+  min-width: 180px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 2px solid #3a506b;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.exportar-box.mostrar-exportar {
+  display: flex;
+}
+
+.btn-opcao-exportar {
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+}
