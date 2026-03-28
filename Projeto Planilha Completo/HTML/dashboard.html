@@ -18,7 +18,7 @@
   <div class="opcoes">
     <h2>OPÇÕES</h2>
 
-    <a class="menu-ativo" href="index.html">
+    <a class="menu-ativo" href="dashboard.html">
       <i class="fa-solid fa-chart-column"></i> Dashboard
     </a>
 
@@ -66,7 +66,7 @@
 
       <div class="card">
         <p>Próximo Vencimento</p>
-        <p id="vencimento" class="valor">0</p>
+        <p id="vencimento" class="valor">-</p>
       </div>
     </div>
 
@@ -83,41 +83,7 @@
       </thead>
 
       <tbody id="tabela-body">
-        <tr>
-          <td><input type="radio" name="selecionado"></td>
-          <td>João Pereira de Araújo Gomes</td>
-          <td>121.456.4789-85</td>
-          <td>2026-12-12</td>
-          <td>Pago</td>
-          <td>0</td>
-        </tr>
-
-        <tr>
-          <td><input type="radio" name="selecionado"></td>
-          <td>Maria Santa da Costa</td>
-          <td>121.456.4789-86</td>
-          <td>2026-01-10</td>
-          <td>Não Pago</td>
-          <td>39</td>
-        </tr>
-
-        <tr>
-          <td><input type="radio" name="selecionado"></td>
-          <td>Pedro Hugo Santos</td>
-          <td>121.456.4789-87</td>
-          <td>2026-12-12</td>
-          <td>Pago</td>
-          <td>0</td>
-        </tr>
-
-        <tr>
-          <td><input type="radio" name="selecionado"></td>
-          <td>Joana Maria Silva</td>
-          <td>851.566.427-85</td>
-          <td>2026-01-10</td>
-          <td>Não Pago</td>
-          <td>39</td>
-        </tr>
+        <!-- preenchido pelo JavaScript -->
       </tbody>
     </table>
 
@@ -142,7 +108,7 @@
       <label for="edit-status">Status:</label>
       <select id="edit-status">
         <option value="Pago">Pago</option>
-        <option value="Não Pago">Não Pago</option>
+        <option value="Pendente">Pendente</option>
       </select>
 
       <div class="botoes-modal">
@@ -152,6 +118,7 @@
     </div>
   </div>
 
-  <script defer src="./dashboard.js"></script>
+  <script src="banco.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
