@@ -1,0 +1,47 @@
+{
+  "name": "planilha-medeiros-moreira",
+  "version": "1.0.0",
+  "description": "Sistema desktop para controle de clientes",
+  "main": "main.js",
+
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+
+  "dependencies": {
+    "sqlite3": "^5.1.7"
+  },
+
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^26.8.1"
+  },
+
+  "build": {
+    "appId": "com.medeirosemoreira.planilha",
+    "productName": "Planilha Medeiros e Moreira",
+
+    "files": [
+      "main.js",
+      "preload.js",
+      "db.js",
+      "HTML/**/*",
+      "CSS/**/*",
+      "Imagens/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Planilha-Medeiros-e-Moreira-Setup-${version}.${ext}"
+    }
+  }
+}
