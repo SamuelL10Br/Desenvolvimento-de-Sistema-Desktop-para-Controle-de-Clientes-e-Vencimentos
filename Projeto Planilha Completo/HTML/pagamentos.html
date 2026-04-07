@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pagamentos</title>
 
-  <link rel="stylesheet" href="../CSS/pagamentos.css">
   <link rel="stylesheet" href="../CSS/dashboard.css">
   <link rel="stylesheet" href="../CSS/clientes.css">
+  <link rel="stylesheet" href="../CSS/pagamentos.css">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,19 +19,28 @@
     <h2>OPÇÕES</h2>
 
     <a class="nao-ativo" href="dashboard.html">
-      <i class="fa-solid fa-chart-column"></i> Dashboard
+      <i class="fa-solid fa-chart-column"></i>
+      Dashboard
     </a>
 
     <a class="nao-ativo" href="clientes.html">
-      <i class="fa-solid fa-users"></i> Dados dos Clientes
+      <i class="fa-solid fa-users"></i>
+      Dados dos Clientes
     </a>
 
     <a class="menu-ativo" href="pagamentos.html">
-      <i class="fa-solid fa-credit-card"></i> Pagamentos
+      <i class="fa-solid fa-credit-card"></i>
+      Pagamentos
     </a>
 
     <a class="nao-ativo" href="importacao.html">
-      <i class="fa-solid fa-folder-open"></i> Importar/Exportar
+      <i class="fa-solid fa-file-export"></i>
+      Exportação
+    </a>
+
+    <a class="nao-ativo" href="sobre.html">
+      <i class="fa-solid fa-circle-info"></i>
+      Sobre
     </a>
   </div>
 
@@ -44,12 +53,13 @@
           type="text"
           class="pesquisa"
           id="pesquisa"
-          placeholder="Pesquisar Cliente - nome/CPF"
+          placeholder="Pesquisar cliente - nome/CPF"
+          autocomplete="off"
         >
         <i class="fa-solid fa-magnifying-glass"></i>
       </div>
 
-      <button class="btn" id="btn-editar">
+      <button class="btn" id="btn-editar" type="button">
         <i class="fa-solid fa-pen"></i> Editar
       </button>
     </div>
@@ -69,9 +79,7 @@
         </tr>
       </thead>
 
-      <tbody id="tabela-body">
-        <!-- preenchido pelo JavaScript -->
-      </tbody>
+      <tbody id="tabela-body"></tbody>
     </table>
   </div>
 
@@ -80,13 +88,13 @@
       <h2>Editar Pagamento</h2>
 
       <label for="input-nome">Nome:</label>
-      <input type="text" id="input-nome">
+      <input type="text" id="input-nome" autocomplete="off">
 
       <label for="input-cpf">CPF:</label>
-      <input type="text" id="input-cpf">
+      <input type="text" id="input-cpf" maxlength="14" placeholder="000.000.000-00" autocomplete="off">
 
       <label for="input-valor">Valor:</label>
-      <input type="text" id="input-valor">
+      <input type="text" id="input-valor" inputmode="decimal" placeholder="0,00" autocomplete="off">
 
       <label for="input-vencimento">Vencimento:</label>
       <input type="date" id="input-vencimento">
@@ -95,6 +103,8 @@
       <select id="input-status">
         <option value="Pago">Pago</option>
         <option value="Pendente">Pendente</option>
+        <option value="Atrasado">Atrasado</option>
+        <option value="Em dia">Em dia</option>
       </select>
 
       <label for="input-ativo">Ativo/Não Ativo:</label>
@@ -107,15 +117,16 @@
       <input type="date" id="input-ultimo-pagamento">
 
       <label for="input-atraso">Dias em Atraso:</label>
-      <input type="number" id="input-atraso" readonly>
+      <input type="number" id="input-atraso" min="0">
 
       <div class="botoes-modal">
-        <button id="btn-confirmar">Confirmar</button>
-        <button id="btn-cancelar">Cancelar</button>
+        <button id="btn-confirmar" type="button">Confirmar</button>
+        <button id="btn-cancelar" type="button">Cancelar</button>
       </div>
     </div>
   </div>
 
+  <script src="ui-feedback.js"></script>
   <script src="banco.js"></script>
   <script src="pagamentos.js"></script>
 </body>

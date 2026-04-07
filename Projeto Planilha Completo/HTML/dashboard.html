@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,24 +14,32 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-
   <div class="opcoes">
     <h2>OPÇÕES</h2>
 
     <a class="menu-ativo" href="dashboard.html">
-      <i class="fa-solid fa-chart-column"></i> Dashboard
+      <i class="fa-solid fa-chart-column"></i>
+      Dashboard
     </a>
 
     <a class="nao-ativo" href="clientes.html">
-      <i class="fa-solid fa-users"></i> Dados dos Clientes
+      <i class="fa-solid fa-users"></i>
+      Dados dos Clientes
     </a>
 
     <a class="nao-ativo" href="pagamentos.html">
-      <i class="fa-solid fa-credit-card"></i> Pagamentos
+      <i class="fa-solid fa-credit-card"></i>
+      Pagamentos
     </a>
 
     <a class="nao-ativo" href="importacao.html">
-      <i class="fa-solid fa-folder-open"></i> Importar/Exportar
+      <i class="fa-solid fa-folder-open"></i>
+      Importar/Exportar
+    </a>
+
+    <a class="nao-ativo" href="sobre.html">
+      <i class="fa-solid fa-circle-info"></i>
+      Sobre
     </a>
   </div>
 
@@ -73,7 +81,6 @@
     <table class="tabela-clientes">
       <thead>
         <tr>
-          <th>Selecionar</th>
           <th>Cliente</th>
           <th>CPF</th>
           <th>Vencimento</th>
@@ -86,36 +93,6 @@
         <!-- preenchido pelo JavaScript -->
       </tbody>
     </table>
-
-    <button class="btn" id="btn-editar">
-      <i class="fa-solid fa-pen"></i> Editar
-    </button>
-  </div>
-
-  <div id="modal-editar" class="modal hidden">
-    <div class="modal-conteudo">
-      <h2>Editar Cliente</h2>
-
-      <label for="edit-nome">Nome:</label>
-      <input type="text" id="edit-nome">
-
-      <label for="edit-cpf">CPF:</label>
-      <input type="text" id="edit-cpf">
-
-      <label for="edit-vencimento">Vencimento:</label>
-      <input type="date" id="edit-vencimento">
-
-      <label for="edit-status">Status:</label>
-      <select id="edit-status">
-        <option value="Pago">Pago</option>
-        <option value="Pendente">Pendente</option>
-      </select>
-
-      <div class="botoes-modal">
-        <button id="btn-confirmar">Confirmar</button>
-        <button id="btn-cancelar">Cancelar</button>
-      </div>
-    </div>
   </div>
 
   <script src="banco.js"></script>

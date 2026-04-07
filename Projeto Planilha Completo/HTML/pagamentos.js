@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 document.addEventListener("DOMContentLoaded", async () => {
   const btnEditar = document.getElementById("btn-editar");
   const btnCancelar = document.getElementById("btn-cancelar");
@@ -16,473 +15,328 @@ document.addEventListener("DOMContentLoaded", async () => {
   const inputAtraso = document.getElementById("input-atraso");
 
   let cpfOriginal = null;
+  let timeoutPesquisa = null;
 
-  async function obterPagamentoSelecionado() {
-    const radioSelecionado = document.querySelector(
-      'input[name="pagamentoSelecionado"]:checked'
-    );
-
-    if (!radioSelecionado) {
-      return null;
-    }
-
-    const cpfSelecionado = radioSelecionado.value;
-    const clientes = await obterClientes();
-
-    return clientes.find((item) => item.cpf === cpfSelecionado) || null;
+  function modalAberto() {
+    return !modal.classList.contains("hidden");
   }
 
-  async function abrirModalEdicao() {
-    const cliente = await obterPagamentoSelecionado();
+  function limparCPF(cpf) {
+    return String(cpf || "").replace(/\D/g, "").slice(0, 11);
+  }
 
-    if (!cliente) {
-      alert("Selecione um pagamento para editar.");
-      return;
-    }
+  function formatarCPF(cpf) {
+    const numeros = limparCPF(cpf);
+    if (!numeros) return "";
 
-    cpfOriginal = cliente.cpf;
+    return numeros
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2");
+  }
 
-    inputNome.value = cliente.nome || "";
-    inputCpf.value = cliente.cpf || "";
-    inputValor.value = formatarValorInput(cliente.valor);
-    inputVencimento.value = converterDataParaInput(cliente.vencimento);
-    inputStatus.value = cliente.statusPagamento || "Pendente";
-    inputAtivo.value = cliente.ativo || "Ativo";
-    inputUltimoPagamento.value = converterDataParaInput(cliente.ultimoPagamento);
-    inputAtraso.value = calcularDiasAtraso(cliente.vencimento);
+  function normalizarTexto(valor) {
+    return String(valor || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
 
+  function ordenarClientesPorNome(clientes) {
+    return [...clientes].sort((a, b) =>
+      String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", {
+        sensitivity: "base"
+      })
+    );
+  }
+
+  function abrirModal() {
+    document.body.classList.add("modal-aberto");
     modal.classList.remove("hidden");
+    inputNome.focus();
   }
 
   function fecharModal() {
+    document.body.classList.remove("modal-aberto");
     modal.classList.add("hidden");
     cpfOriginal = null;
   }
 
-  async function salvarEdicaoPagamento() {
-    if (!cpfOriginal) return;
+  function converterDataParaInput(data) {
+    if (!data) return "";
 
-    const nome = inputNome.value.trim();
-    const cpf = inputCpf.value.trim();
-    const valor = converterValorParaNumero(inputValor.value);
-    const vencimento = inputVencimento.value;
-    const statusPagamento = inputStatus.value;
-    const ativo = inputAtivo.value;
-    const ultimoPagamento = inputUltimoPagamento.value;
+    const texto = String(data).trim();
 
-    if (!nome || !cpf || valor === null || !vencimento || !statusPagamento || !ativo) {
-      alert("Preencha todos os campos obrigatórios.");
-      return;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+      return texto;
     }
 
-    const clientes = await obterClientes();
-    const clienteAtual = clientes.find((item) => item.cpf === cpfOriginal);
-
-    if (!clienteAtual) {
-      alert("Cliente não encontrado.");
-      return;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+      const [dia, mes, ano] = texto.split("/");
+      return `${ano}-${mes}-${dia}`;
     }
 
-    const cpfDuplicado = clientes.some(
-      (item) => item.cpf === cpf && item.cpf !== cpfOriginal
-    );
-
-    if (cpfDuplicado) {
-      alert("Já existe outro cliente com esse CPF.");
-      return;
-    }
-
-    const clienteAtualizado = {
-      ...clienteAtual,
-      nome,
-      cpf,
-      valor,
-      vencimento,
-      statusPagamento,
-      ativo,
-      ultimoPagamento
-    };
-
-    await excluirCliente(cpfOriginal);
-    await adicionarClientes([clienteAtualizado]);
-
-    await renderizarPagamentos();
-    fecharModal();
+    return "";
   }
 
-  btnEditar.addEventListener("click", abrirModalEdicao);
-  btnCancelar.addEventListener("click", fecharModal);
-  btnConfirmar.addEventListener("click", salvarEdicaoPagamento);
+  function formatarDataParaExibicao(data) {
+    const dataInput = converterDataParaInput(data);
+    if (!dataInput) return "-";
 
-  inputVencimento.addEventListener("input", () => {
-    inputAtraso.value = calcularDiasAtraso(inputVencimento.value);
-  });
-
-  pesquisa.addEventListener("input", async () => {
-    await filtrarPagamentos();
-  });
-
-  await renderizarPagamentos();
-});
-
-async function renderizarPagamentos(lista = null) {
-  const tabelaBody = document.getElementById("tabela-body");
-  if (!tabelaBody) return;
-
-  const clientes = lista || await obterClientes();
-
-  tabelaBody.innerHTML = "";
-
-  clientes.forEach((cliente) => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>
-        <input
-          type="radio"
-          name="pagamentoSelecionado"
-          value="${cliente.cpf}"
-        >
-      </td>
-      <td>${cliente.nome || ""}</td>
-      <td>${cliente.cpf || ""}</td>
-      <td>${formatarMoeda(cliente.valor)}</td>
-      <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-      <td>${cliente.statusPagamento || ""}</td>
-      <td>${cliente.ativo || ""}</td>
-      <td>${formatarDataParaExibicao(cliente.ultimoPagamento)}</td>
-      <td>${calcularDiasAtraso(cliente.vencimento)}</td>
-    `;
-
-    tabelaBody.appendChild(tr);
-  });
-}
-
-async function filtrarPagamentos() {
-  const inputPesquisa = document.getElementById("pesquisa");
-  if (!inputPesquisa) return;
-
-  const termo = inputPesquisa.value.toLowerCase().trim();
-  const clientes = await obterClientes();
-
-  const filtrados = clientes.filter((cliente) =>
-    (cliente.nome || "").toLowerCase().includes(termo) ||
-    (cliente.cpf || "").toLowerCase().includes(termo)
-  );
-
-  await renderizarPagamentos(filtrados);
-}
-
-function calcularDiasAtraso(data) {
-  if (!data) return 0;
-
-  const hoje = new Date();
-  const vencimento = new Date(converterDataParaInput(data) + "T00:00:00");
-
-  hoje.setHours(0, 0, 0, 0);
-
-  const diferenca = hoje - vencimento;
-  const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
-
-  return dias > 0 ? dias : 0;
-}
-
-function formatarMoeda(valor) {
-  const numero = Number(valor) || 0;
-  return numero.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
-}
-
-function formatarValorInput(valor) {
-  const numero = Number(valor) || 0;
-  return numero.toFixed(2).replace(".", ",");
-}
-
-function converterValorParaNumero(valorTexto) {
-  if (!valorTexto) return null;
-
-  const textoLimpo = valorTexto
-    .replaceAll("R$", "")
-    .replaceAll(".", "")
-    .replace(",", ".")
-    .trim();
-
-  const numero = Number(textoLimpo);
-
-  return Number.isNaN(numero) ? null : numero;
-}
-
-function formatarDataParaExibicao(data) {
-  if (!data) return "-";
-
-  const dataPadrao = converterDataParaInput(data);
-  if (!dataPadrao) return "-";
-
-  const partes = dataPadrao.split("-");
-  if (partes.length !== 3) return data;
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function converterDataParaInput(data) {
-  if (!data) return "";
-
-  if (data.includes("-")) {
-    return data;
+    const [ano, mes, dia] = dataInput.split("-");
+    return `${dia}/${mes}/${ano}`;
   }
 
-  if (data.includes("/")) {
-    const partes = data.split("/");
-    if (partes.length === 3) {
-      return `${partes[2]}-${partes[1]}-${partes[0]}`;
-    }
+  function calcularDiasAtrasoAutomatico(data) {
+    const dataConvertida = converterDataParaInput(data);
+
+    if (!dataConvertida) return 0;
+
+    const hoje = new Date();
+    const vencimento = new Date(`${dataConvertida}T00:00:00`);
+
+    hoje.setHours(0, 0, 0, 0);
+
+    const diferenca = hoje - vencimento;
+    const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+
+    return dias > 0 ? dias : 0;
   }
 
-  return "";
-=======
-document.addEventListener("DOMContentLoaded", async () => {
-  const btnEditar = document.getElementById("btn-editar");
-  const btnCancelar = document.getElementById("btn-cancelar");
-  const btnConfirmar = document.getElementById("btn-confirmar");
-  const pesquisa = document.getElementById("pesquisa");
-  const modal = document.getElementById("modal-pagamento");
+  function formatarMoeda(valor) {
+    const numero = Number(valor) || 0;
 
-  const inputNome = document.getElementById("input-nome");
-  const inputCpf = document.getElementById("input-cpf");
-  const inputValor = document.getElementById("input-valor");
-  const inputVencimento = document.getElementById("input-vencimento");
-  const inputStatus = document.getElementById("input-status");
-  const inputAtivo = document.getElementById("input-ativo");
-  const inputUltimoPagamento = document.getElementById("input-ultimo-pagamento");
-  const inputAtraso = document.getElementById("input-atraso");
+    return numero.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
+  }
 
-  let cpfOriginal = null;
+  function formatarMoedaSemSimbolo(valor) {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return "";
+
+    return numero.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  }
+
+  function converterValorParaNumero(valorTexto) {
+    if (valorTexto === null || valorTexto === undefined) return null;
+
+    const textoLimpo = String(valorTexto)
+      .replaceAll("R$", "")
+      .replace(/\s/g, "")
+      .replaceAll(".", "")
+      .replace(",", ".")
+      .trim();
+
+    if (!textoLimpo) return null;
+
+    const numero = Number(textoLimpo);
+    return Number.isNaN(numero) ? null : numero;
+  }
 
   async function obterPagamentoSelecionado() {
-    const radioSelecionado = document.querySelector(
-      'input[name="pagamentoSelecionado"]:checked'
-    );
+    const selecionado = document.querySelector('input[name="pagamentoSelecionado"]:checked');
+    if (!selecionado) return null;
 
-    if (!radioSelecionado) {
-      return null;
-    }
-
-    const cpfSelecionado = radioSelecionado.value;
+    const cpfSelecionado = limparCPF(selecionado.value);
     const clientes = await obterClientes();
 
-    return clientes.find((item) => item.cpf === cpfSelecionado) || null;
+    return clientes.find((item) => limparCPF(item.cpf) === cpfSelecionado) || null;
   }
 
   async function abrirModalEdicao() {
-    const cliente = await obterPagamentoSelecionado();
+    try {
+      const cliente = await obterPagamentoSelecionado();
 
-    if (!cliente) {
-      alert("Selecione um pagamento para editar.");
-      return;
+      if (!cliente) {
+        window.uiFeedback.error("Selecione um pagamento para editar.");
+        return;
+      }
+
+      cpfOriginal = limparCPF(cliente.cpf);
+
+      inputNome.value = cliente.nome || "";
+      inputCpf.value = limparCPF(cliente.cpf || "");
+      inputValor.value = formatarMoedaSemSimbolo(cliente.valor);
+      inputVencimento.value = converterDataParaInput(cliente.vencimento);
+      inputStatus.value = cliente.statusPagamento || "Pendente";
+      inputAtivo.value = cliente.ativo || "Ativo";
+      inputUltimoPagamento.value = converterDataParaInput(cliente.ultimoPagamento);
+
+      if (
+        cliente.diasAtrasoManual !== undefined &&
+        cliente.diasAtrasoManual !== null &&
+        cliente.diasAtrasoManual !== ""
+      ) {
+        inputAtraso.value = cliente.diasAtrasoManual;
+      } else {
+        inputAtraso.value = calcularDiasAtrasoAutomatico(cliente.vencimento);
+      }
+
+      abrirModal();
+    } catch (erro) {
+      console.error("Erro ao abrir edição de pagamento:", erro);
+      window.uiFeedback.error("Erro ao abrir edição.");
     }
-
-    cpfOriginal = cliente.cpf;
-
-    inputNome.value = cliente.nome || "";
-    inputCpf.value = cliente.cpf || "";
-    inputValor.value = formatarValorInput(cliente.valor);
-    inputVencimento.value = converterDataParaInput(cliente.vencimento);
-    inputStatus.value = cliente.statusPagamento || "Pendente";
-    inputAtivo.value = cliente.ativo || "Ativo";
-    inputUltimoPagamento.value = converterDataParaInput(cliente.ultimoPagamento);
-    inputAtraso.value = calcularDiasAtraso(cliente.vencimento);
-
-    modal.classList.remove("hidden");
-  }
-
-  function fecharModal() {
-    modal.classList.add("hidden");
-    cpfOriginal = null;
   }
 
   async function salvarEdicaoPagamento() {
-    if (!cpfOriginal) return;
+    try {
+      if (!cpfOriginal) return;
 
-    const nome = inputNome.value.trim();
-    const cpf = inputCpf.value.trim();
-    const valor = converterValorParaNumero(inputValor.value);
-    const vencimento = inputVencimento.value;
-    const statusPagamento = inputStatus.value;
-    const ativo = inputAtivo.value;
-    const ultimoPagamento = inputUltimoPagamento.value;
+      const nome = inputNome.value.trim();
+      const cpf = limparCPF(inputCpf.value);
+      const valor = converterValorParaNumero(inputValor.value);
+      const vencimento = inputVencimento.value;
+      const statusPagamento = inputStatus.value;
+      const ativo = inputAtivo.value;
+      const ultimoPagamento = inputUltimoPagamento.value;
+      const diasAtrasoManual = inputAtraso.value === "" ? "" : Number(inputAtraso.value);
 
-    if (!nome || !cpf || valor === null || !vencimento || !statusPagamento || !ativo) {
-      alert("Preencha todos os campos obrigatórios.");
+      if (!nome || !cpf || cpf.length !== 11) {
+        window.uiFeedback.error("Nome e CPF válidos são obrigatórios.");
+        return;
+      }
+
+      if (valor === null) {
+        window.uiFeedback.error("Informe um valor válido.");
+        return;
+      }
+
+      const clientes = await obterClientes();
+      const clienteAtual = clientes.find((cliente) => limparCPF(cliente.cpf) === cpfOriginal);
+
+      if (!clienteAtual) {
+        window.uiFeedback.error("Cliente não encontrado.");
+        return;
+      }
+
+      const clienteAtualizado = {
+        ...clienteAtual,
+        nome,
+        cpf,
+        valor,
+        vencimento,
+        statusPagamento,
+        ativo,
+        ultimoPagamento,
+        diasAtrasoManual
+      };
+
+      await excluirCliente(cpfOriginal);
+      await adicionarClientes([clienteAtualizado]);
+      await renderizarPagamentos();
+      fecharModal();
+      window.uiFeedback.success("Pagamento atualizado com sucesso.");
+    } catch (erro) {
+      console.error("Erro ao salvar pagamento:", erro);
+      window.uiFeedback.error("Erro ao salvar pagamento.");
+    }
+  }
+
+  async function renderizarPagamentos(lista = null) {
+    const tabelaBody = document.getElementById("tabela-body");
+    if (!tabelaBody) return;
+
+    const clientes = lista || await obterClientes();
+    const clientesOrdenados = ordenarClientesPorNome(clientes);
+
+    tabelaBody.innerHTML = "";
+
+    if (!clientesOrdenados.length) {
+      tabelaBody.innerHTML = `
+        <tr>
+          <td colspan="9">Nenhum pagamento cadastrado.</td>
+        </tr>
+      `;
       return;
     }
 
+    clientesOrdenados.forEach((cliente) => {
+      const tr = document.createElement("tr");
+
+      const atrasoExibido =
+        cliente.diasAtrasoManual !== undefined &&
+        cliente.diasAtrasoManual !== null &&
+        cliente.diasAtrasoManual !== ""
+          ? cliente.diasAtrasoManual
+          : calcularDiasAtrasoAutomatico(cliente.vencimento);
+
+      tr.innerHTML = `
+        <td><input type="radio" name="pagamentoSelecionado" value="${limparCPF(cliente.cpf)}"></td>
+        <td>${cliente.nome || ""}</td>
+        <td>${formatarCPF(cliente.cpf || "")}</td>
+        <td>${formatarMoeda(cliente.valor)}</td>
+        <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
+        <td>${cliente.statusPagamento || "Pendente"}</td>
+        <td>${cliente.ativo || "Ativo"}</td>
+        <td>${formatarDataParaExibicao(cliente.ultimoPagamento)}</td>
+        <td>${atrasoExibido}</td>
+      `;
+
+      tabelaBody.appendChild(tr);
+    });
+  }
+
+  async function aplicarPesquisaPagamentos() {
+    if (modalAberto()) return;
+
+    const termoTexto = normalizarTexto(pesquisa.value);
+    const termoCpf = limparCPF(pesquisa.value);
     const clientes = await obterClientes();
-    const clienteAtual = clientes.find((item) => item.cpf === cpfOriginal);
 
-    if (!clienteAtual) {
-      alert("Cliente não encontrado.");
+    if (!termoTexto && !termoCpf) {
+      await renderizarPagamentos(clientes);
       return;
     }
 
-    const cpfDuplicado = clientes.some(
-      (item) => item.cpf === cpf && item.cpf !== cpfOriginal
-    );
+    const filtrados = clientes.filter((cliente) => {
+      const nome = normalizarTexto(cliente.nome);
+      const cpf = limparCPF(cliente.cpf);
 
-    if (cpfDuplicado) {
-      alert("Já existe outro cliente com esse CPF.");
-      return;
-    }
+      const buscaPorNome = termoTexto ? nome.includes(termoTexto) : false;
+      const buscaPorCpf = termoCpf ? cpf.includes(termoCpf) : false;
 
-    const clienteAtualizado = {
-      ...clienteAtual,
-      nome,
-      cpf,
-      valor,
-      vencimento,
-      statusPagamento,
-      ativo,
-      ultimoPagamento
-    };
+      return buscaPorNome || buscaPorCpf;
+    });
 
-    await excluirCliente(cpfOriginal);
-    await adicionarClientes([clienteAtualizado]);
-
-    await renderizarPagamentos();
-    fecharModal();
+    await renderizarPagamentos(filtrados);
   }
 
   btnEditar.addEventListener("click", abrirModalEdicao);
   btnCancelar.addEventListener("click", fecharModal);
-  btnConfirmar.addEventListener("click", salvarEdicaoPagamento);
 
-  inputVencimento.addEventListener("input", () => {
-    inputAtraso.value = calcularDiasAtraso(inputVencimento.value);
+  btnConfirmar.addEventListener("click", async () => {
+    btnConfirmar.disabled = true;
+    try {
+      await salvarEdicaoPagamento();
+    } finally {
+      btnConfirmar.disabled = false;
+    }
   });
 
-  pesquisa.addEventListener("input", async () => {
-    await filtrarPagamentos();
+  inputCpf.addEventListener("blur", () => {
+    inputCpf.value = formatarCPF(inputCpf.value);
+  });
+
+  inputValor.addEventListener("blur", () => {
+    const valor = converterValorParaNumero(inputValor.value);
+    inputValor.value = valor === null ? "" : formatarMoedaSemSimbolo(valor);
+  });
+
+  pesquisa.addEventListener("input", () => {
+    if (modalAberto()) return;
+
+    clearTimeout(timeoutPesquisa);
+    timeoutPesquisa = setTimeout(() => {
+      aplicarPesquisaPagamentos();
+    }, 250);
   });
 
   await renderizarPagamentos();
 });
-
-async function renderizarPagamentos(lista = null) {
-  const tabelaBody = document.getElementById("tabela-body");
-  if (!tabelaBody) return;
-
-  const clientes = lista || await obterClientes();
-
-  tabelaBody.innerHTML = "";
-
-  clientes.forEach((cliente) => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>
-        <input
-          type="radio"
-          name="pagamentoSelecionado"
-          value="${cliente.cpf}"
-        >
-      </td>
-      <td>${cliente.nome || ""}</td>
-      <td>${cliente.cpf || ""}</td>
-      <td>${formatarMoeda(cliente.valor)}</td>
-      <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-      <td>${cliente.statusPagamento || ""}</td>
-      <td>${cliente.ativo || ""}</td>
-      <td>${formatarDataParaExibicao(cliente.ultimoPagamento)}</td>
-      <td>${calcularDiasAtraso(cliente.vencimento)}</td>
-    `;
-
-    tabelaBody.appendChild(tr);
-  });
-}
-
-async function filtrarPagamentos() {
-  const inputPesquisa = document.getElementById("pesquisa");
-  if (!inputPesquisa) return;
-
-  const termo = inputPesquisa.value.toLowerCase().trim();
-  const clientes = await obterClientes();
-
-  const filtrados = clientes.filter((cliente) =>
-    (cliente.nome || "").toLowerCase().includes(termo) ||
-    (cliente.cpf || "").toLowerCase().includes(termo)
-  );
-
-  await renderizarPagamentos(filtrados);
-}
-
-function calcularDiasAtraso(data) {
-  if (!data) return 0;
-
-  const hoje = new Date();
-  const vencimento = new Date(converterDataParaInput(data) + "T00:00:00");
-
-  hoje.setHours(0, 0, 0, 0);
-
-  const diferenca = hoje - vencimento;
-  const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
-
-  return dias > 0 ? dias : 0;
-}
-
-function formatarMoeda(valor) {
-  const numero = Number(valor) || 0;
-  return numero.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
-}
-
-function formatarValorInput(valor) {
-  const numero = Number(valor) || 0;
-  return numero.toFixed(2).replace(".", ",");
-}
-
-function converterValorParaNumero(valorTexto) {
-  if (!valorTexto) return null;
-
-  const textoLimpo = valorTexto
-    .replaceAll("R$", "")
-    .replaceAll(".", "")
-    .replace(",", ".")
-    .trim();
-
-  const numero = Number(textoLimpo);
-
-  return Number.isNaN(numero) ? null : numero;
-}
-
-function formatarDataParaExibicao(data) {
-  if (!data) return "-";
-
-  const dataPadrao = converterDataParaInput(data);
-  if (!dataPadrao) return "-";
-
-  const partes = dataPadrao.split("-");
-  if (partes.length !== 3) return data;
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function converterDataParaInput(data) {
-  if (!data) return "";
-
-  if (data.includes("-")) {
-    return data;
-  }
-
-  if (data.includes("/")) {
-    const partes = data.split("/");
-    if (partes.length === 3) {
-      return `${partes[2]}-${partes[1]}-${partes[0]}`;
-    }
-  }
-
-  return "";
->>>>>>> 58a941ec0587124e61e141c1caab830110137ff8
-}

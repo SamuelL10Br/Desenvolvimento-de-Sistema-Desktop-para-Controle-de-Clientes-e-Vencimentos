@@ -1,47 +1,43 @@
 {
-  "name": "planilha-medeiros-moreira",
+  "name": "sistema-clientes-pex",
   "version": "1.0.0",
-  "description": "Sistema desktop para controle de clientes",
+  "description": "Sistema desktop para controle de clientes e vencimentos",
   "main": "main.js",
+  "author": "Samuel Luciano",
+  "license": "MIT",
 
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
-  },
-
-  "dependencies": {
-    "sqlite3": "^5.1.7"
+    "build": "electron-builder --win"
   },
 
   "devDependencies": {
-    "electron": "^35.0.0",
-    "electron-builder": "^26.8.1"
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
   },
 
   "build": {
-    "appId": "com.medeirosemoreira.planilha",
-    "productName": "Planilha Medeiros e Moreira",
+    "appId": "com.samuel.sistemaclientespex",
+    "productName": "Sistema Clientes PEX",
 
     "files": [
       "main.js",
       "preload.js",
-      "db.js",
       "HTML/**/*",
       "CSS/**/*",
       "Imagens/**/*",
-      "node_modules/**/*",
       "package.json"
     ],
 
     "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico"
+      "target": "nsis"
     },
 
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "Planilha-Medeiros-e-Moreira-Setup-${version}.${ext}"
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
   }
 }

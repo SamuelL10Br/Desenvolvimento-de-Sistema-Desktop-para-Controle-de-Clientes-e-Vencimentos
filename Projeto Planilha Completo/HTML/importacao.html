@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Importar/Exportar</title>
+  <title>Exportação</title>
 
   <link rel="stylesheet" href="../CSS/importacao.css">
   <link rel="stylesheet" href="../CSS/dashboard.css">
@@ -11,16 +11,10 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap"
-    rel="stylesheet"
-  >
-
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-  >
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <div class="opcoes">
@@ -42,156 +36,76 @@
     </a>
 
     <a class="menu-ativo" href="importacao.html">
-      <i class="fa-solid fa-folder-open"></i>
-      Importar/Exportar
+      <i class="fa-solid fa-file-export"></i>
+      Exportação
+    </a>
+
+    <a class="nao-ativo" href="sobre.html">
+      <i class="fa-solid fa-circle-info"></i>
+      Sobre
     </a>
   </div>
 
   <div class="conteudo">
-    <h2 class="titulo">IMPORTAR/EXPORTAR DADOS</h2>
+    <h2 class="titulo">EXPORTAÇÃO DE DADOS DOS CLIENTES</h2>
 
-    <div class="barra-acoes">
-      <button class="btn" id="btnImportar" type="button">
-        <i class="fa-solid fa-file-import"></i>
-        Importar
-      </button>
-
+    <div class="barra-acoes barra-principal">
       <input
-        type="file"
-        id="inputImportar"
-        accept=".json,.csv,.txt,.xls,.xlsx"
-        style="display: none;"
+        type="text"
+        id="campoFiltro"
+        placeholder="Digite um termo opcional para pesquisar nos campos marcados"
+        autocomplete="off"
       >
 
-      <div class="exportar-container">
-        <button class="btn" id="btnExportar" type="button">
-          <i class="fa-solid fa-file-export"></i>
-          Exportar
-        </button>
+      <button class="btn" id="btnExportarJson" type="button">Exportar JSON</button>
+      <button class="btn" id="btnExportarCsv" type="button">Exportar CSV</button>
+      <button class="btn" id="btnExportarExcel" type="button">Exportar Excel</button>
+    </div>
 
-        <div class="exportar-box" id="exportarBox">
-          <button class="btn-opcao-exportar" id="btnExportarJson" type="button">
-            Exportar JSON
-          </button>
-
-          <button class="btn-opcao-exportar" id="btnExportarCsv" type="button">
-            Exportar CSV
-          </button>
-
-          <button class="btn-opcao-exportar" id="btnExportarExcel" type="button">
-            Exportar Excel
-          </button>
-        </div>
+    <div class="painel-filtros">
+      <div class="painel-filtros-titulo">
+        <i class="fa-solid fa-filter"></i>
+        Campos do filtro / colunas visíveis
       </div>
 
-      <div class="campo-pesquisa">
-        <input
-          type="text"
-          class="pesquisa"
-          id="pesquisaCliente"
-          placeholder="Pesquisar Cliente"
-        >
-        <i class="fa-solid fa-magnifying-glass"></i>
-      </div>
-
-      <div class="filtro-container">
-        <button class="btn" id="btnAbrirFiltro" type="button">
-          <i class="fa-solid fa-filter"></i>
-          Filtrar
-        </button>
-
-        <div class="filtro-box" id="filtroBox">
-          <label>
-            <input type="checkbox" value="nome" class="filtro-coluna">
-            Nome
-          </label>
-
-          <label>
-            <input type="checkbox" value="cpf" class="filtro-coluna">
-            CPF
-          </label>
-
-          <label>
-            <input type="checkbox" value="valor" class="filtro-coluna">
-            Valor
-          </label>
-
-          <label>
-            <input type="checkbox" value="vencimento" class="filtro-coluna">
-            Vencimento
-          </label>
-
-          <label>
-            <input type="checkbox" value="statusPagamento" class="filtro-coluna">
-            Status
-          </label>
-
-          <label>
-            <input type="checkbox" value="ativo" class="filtro-coluna">
-            Ativo/Não Ativo
-          </label>
-
-          <label>
-            <input type="checkbox" value="ultimoPagamento" class="filtro-coluna">
-            Último Pagamento
-          </label>
-
-          <label>
-            <input type="checkbox" value="telefone" class="filtro-coluna">
-            Telefone/Whatsapp
-          </label>
-
-          <label>
-            <input type="checkbox" value="endereco" class="filtro-coluna">
-            Endereço
-          </label>
-
-          <label>
-            <input type="checkbox" value="email" class="filtro-coluna">
-            E-mail
-          </label>
-
-          <button class="btn" id="btnAplicarFiltro" type="button">
-            <i class="fa-solid fa-check"></i>
-            Aplicar
-          </button>
-        </div>
+      <div class="grid-filtros">
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="nome" checked><span>Nome</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="ultimoPagamento" checked><span>Último pagamento</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="cpf" checked><span>CPF</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="status" checked><span>Status</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="valor" checked><span>Valor</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="ativo" checked><span>Ativo/Inativo</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="vencimento" checked><span>Vencimento</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="email" checked><span>Email</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="diaVenc" checked><span>Dia/Venc</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="telefone" checked><span>Telefone/Whatsapp</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="endereco" checked><span>Endereço</span></label>
       </div>
     </div>
 
-    <table class="tabela-clientes" id="tabelaFinanceira">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>CPF</th>
-          <th>Valor</th>
-          <th>Vencimento</th>
-          <th>Status</th>
-          <th>Ativo/Não Ativo</th>
-          <th>Último Pagamento</th>
-          <th>Dias em Atraso</th>
-        </tr>
-      </thead>
-
-      <tbody id="corpoTabelaImportacao"></tbody>
-    </table>
-
-    <table class="tabela-clientes" id="tabelaDadosPessoais">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>CPF</th>
-          <th>Telefone/Whatsapp</th>
-          <th>Endereço</th>
-          <th>E-mail</th>
-        </tr>
-      </thead>
-
-      <tbody id="corpoTabelaDadosPessoais"></tbody>
-    </table>
+    <div class="tabela-wrapper">
+      <table id="tabelaClientes">
+        <thead>
+          <tr>
+            <th data-coluna="nome">Nome</th>
+            <th data-coluna="cpf">CPF</th>
+            <th data-coluna="email">E-mail</th>
+            <th data-coluna="telefone">Telefone/Whatsapp</th>
+            <th data-coluna="endereco">Endereço</th>
+            <th data-coluna="valor">Valor</th>
+            <th data-coluna="vencimento">Vencimento</th>
+            <th data-coluna="diaVenc">Dia/Venc</th>
+            <th data-coluna="status">Status</th>
+            <th data-coluna="ativo">Ativo/Inativo</th>
+            <th data-coluna="ultimoPagamento">Último Pagamento</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabelaClientes"></tbody>
+      </table>
+    </div>
   </div>
 
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="ui-feedback.js"></script>
   <script src="banco.js"></script>
   <script src="importacao.js"></script>
 </body>

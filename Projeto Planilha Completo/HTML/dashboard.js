@@ -1,440 +1,154 @@
-<<<<<<< HEAD
 document.addEventListener("DOMContentLoaded", async () => {
-  const btnEditar = document.getElementById("btn-editar");
-  const modal = document.getElementById("modal-editar");
-  const btnConfirmar = document.getElementById("btn-confirmar");
-  const btnCancelar = document.getElementById("btn-cancelar");
-
-  const inputNome = document.getElementById("edit-nome");
-  const inputCpf = document.getElementById("edit-cpf");
-  const inputVencimento = document.getElementById("edit-vencimento");
-  const inputStatus = document.getElementById("edit-status");
-
-  let cpfOriginal = null;
-
-  async function abrirModalEdicao() {
-    const radioSelecionado = document.querySelector('input[name="selecionado"]:checked');
-
-    if (!radioSelecionado) {
-      alert("Selecione um cliente para editar.");
-      return;
-    }
-
-    const cpfSelecionado = radioSelecionado.value;
-    const clientes = await obterClientes();
-    const cliente = clientes.find((item) => item.cpf === cpfSelecionado);
-
-    if (!cliente) {
-      alert("Cliente não encontrado.");
-      return;
-    }
-
-    cpfOriginal = cliente.cpf;
-    inputNome.value = cliente.nome || "";
-    inputCpf.value = cliente.cpf || "";
-    inputVencimento.value = converterDataParaInput(cliente.vencimento);
-    inputStatus.value = cliente.statusPagamento || "Pendente";
-
-    modal.classList.remove("hidden");
+  function limparCPF(cpf) {
+    return String(cpf || "").replace(/\D/g, "").slice(0, 11);
   }
 
-  function fecharModal() {
-    modal.classList.add("hidden");
-    cpfOriginal = null;
+  function formatarCPF(cpf) {
+    const numeros = limparCPF(cpf);
+
+    if (!numeros) return "";
+
+    return numeros
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2");
   }
 
-  async function salvarEdicao() {
-    if (!cpfOriginal) return;
+  function normalizarTexto(valor) {
+    return String(valor || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
 
-    const nome = inputNome.value.trim();
-    const cpf = inputCpf.value.trim();
-    const vencimento = inputVencimento.value;
-    const status = inputStatus.value;
-
-    if (!nome || !cpf || !vencimento || !status) {
-      alert("Preencha todos os campos.");
-      return;
-    }
-
-    const clientes = await obterClientes();
-    const clienteAtual = clientes.find((item) => item.cpf === cpfOriginal);
-
-    if (!clienteAtual) {
-      alert("Cliente não encontrado.");
-      return;
-    }
-
-    const cpfDuplicado = clientes.some(
-      (item) => item.cpf === cpf && item.cpf !== cpfOriginal
+  function ordenarClientesPorNome(lista) {
+    return [...lista].sort((a, b) =>
+      String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", {
+        sensitivity: "base"
+      })
     );
-
-    if (cpfDuplicado) {
-      alert("Já existe outro cliente com esse CPF.");
-      return;
-    }
-
-    const clienteAtualizado = {
-      ...clienteAtual,
-      nome: nome,
-      cpf: cpf,
-      vencimento: vencimento,
-      statusPagamento: status
-    };
-
-    await excluirCliente(cpfOriginal);
-    await adicionarClientes([clienteAtualizado]);
-
-    await renderizarDashboard();
-    fecharModal();
   }
 
-  btnEditar.addEventListener("click", abrirModalEdicao);
-  btnCancelar.addEventListener("click", fecharModal);
-  btnConfirmar.addEventListener("click", salvarEdicao);
+  function converterDataParaInput(data) {
+    if (!data) return "";
+
+    const texto = String(data).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+      return texto;
+    }
+
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+      const [dia, mes, ano] = texto.split("/");
+      return `${ano}-${mes}-${dia}`;
+    }
+
+    return "";
+  }
+
+  function formatarDataParaExibicao(data) {
+    const dataConvertida = converterDataParaInput(data);
+
+    if (!dataConvertida) return "-";
+
+    const [ano, mes, dia] = dataConvertida.split("-");
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  function calcularDiasParaVencer(data) {
+    const dataConvertida = converterDataParaInput(data);
+
+    if (!dataConvertida) return "-";
+
+    const hoje = new Date();
+    const vencimento = new Date(`${dataConvertida}T00:00:00`);
+
+    if (Number.isNaN(vencimento.getTime())) return "-";
+
+    hoje.setHours(0, 0, 0, 0);
+
+    const diferenca = vencimento - hoje;
+    return Math.ceil(diferenca / (1000 * 60 * 60 * 24));
+  }
+
+  function obterProximoVencimento(clientes) {
+    const clientesComVencimento = clientes
+      .filter((cliente) => converterDataParaInput(cliente.vencimento))
+      .sort((a, b) => {
+        const dataA = new Date(`${converterDataParaInput(a.vencimento)}T00:00:00`);
+        const dataB = new Date(`${converterDataParaInput(b.vencimento)}T00:00:00`);
+        return dataA - dataB;
+      });
+
+    if (clientesComVencimento.length === 0) {
+      return "-";
+    }
+
+    return formatarDataParaExibicao(clientesComVencimento[0].vencimento);
+  }
+
+  function atualizarCards(clientes) {
+    const total = clientes.length;
+
+    const ativos = clientes.filter(
+      (cliente) => normalizarTexto(cliente.ativo) === "ativo"
+    ).length;
+
+    const inativos = clientes.filter(
+      (cliente) => normalizarTexto(cliente.ativo) === "inativo"
+    ).length;
+
+    const adimplentes = clientes.filter((cliente) => {
+      const status = normalizarTexto(cliente.statusPagamento);
+      return status === "pago" || status === "em dia";
+    }).length;
+
+    const inadimplentes = clientes.filter((cliente) => {
+      const status = normalizarTexto(cliente.statusPagamento);
+      return status === "pendente" || status === "atrasado";
+    }).length;
+
+    document.getElementById("totalClientes").textContent = total;
+    document.getElementById("ativos").textContent = ativos;
+    document.getElementById("inativos").textContent = inativos;
+    document.getElementById("adimplentes").textContent = adimplentes;
+    document.getElementById("inadimplentes").textContent = inadimplentes;
+    document.getElementById("vencimento").textContent = obterProximoVencimento(clientes);
+  }
+
+  function renderizarTabelaDashboard(clientes) {
+    const tabelaBody = document.getElementById("tabela-body");
+    if (!tabelaBody) return;
+
+    tabelaBody.innerHTML = "";
+
+    clientes.forEach((cliente) => {
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${cliente.nome || ""}</td>
+        <td>${formatarCPF(cliente.cpf || "")}</td>
+        <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
+        <td>${cliente.statusPagamento || "-"}</td>
+        <td>${calcularDiasParaVencer(cliente.vencimento)}</td>
+      `;
+
+      tabelaBody.appendChild(tr);
+    });
+  }
+
+  async function renderizarDashboard() {
+    try {
+      const clientes = await obterClientes();
+      const clientesOrdenados = ordenarClientesPorNome(clientes);
+
+      atualizarCards(clientesOrdenados);
+      renderizarTabelaDashboard(clientesOrdenados);
+    } catch (erro) {
+      console.error("Erro ao renderizar dashboard:", erro);
+    }
+  }
 
   await renderizarDashboard();
 });
-
-async function renderizarDashboard() {
-  const clientes = await obterClientes();
-
-  atualizarCards(clientes);
-  renderizarTabelaDashboard(clientes);
-}
-
-function atualizarCards(clientes) {
-  const total = clientes.length;
-  const ativos = clientes.filter(
-    (cliente) => String(cliente.ativo || "").trim().toLowerCase() === "ativo"
-  ).length;
-
-  const inativos = clientes.filter(
-    (cliente) => String(cliente.ativo || "").trim().toLowerCase() === "inativo"
-  ).length;
-
-  const adimplentes = clientes.filter(
-    (cliente) => String(cliente.statusPagamento || "").trim().toLowerCase() === "pago"
-  ).length;
-
-  const inadimplentes = clientes.filter(
-    (cliente) => String(cliente.statusPagamento || "").trim().toLowerCase() !== "pago"
-  ).length;
-
-  document.getElementById("totalClientes").textContent = total;
-  document.getElementById("ativos").textContent = ativos;
-  document.getElementById("inativos").textContent = inativos;
-  document.getElementById("adimplentes").textContent = adimplentes;
-  document.getElementById("inadimplentes").textContent = inadimplentes;
-  document.getElementById("vencimento").textContent = obterProximoVencimento(clientes);
-}
-
-function renderizarTabelaDashboard(clientes) {
-  const tabelaBody = document.getElementById("tabela-body");
-
-  if (!tabelaBody) return;
-
-  tabelaBody.innerHTML = "";
-
-  clientes.forEach((cliente) => {
-    const tr = document.createElement("tr");
-    const diasParaVencer = calcularDiasParaVencer(cliente.vencimento);
-
-    tr.innerHTML = `
-      <td>
-        <input
-          type="radio"
-          name="selecionado"
-          value="${cliente.cpf}"
-        >
-      </td>
-      <td>${cliente.nome || ""}</td>
-      <td>${cliente.cpf || ""}</td>
-      <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-      <td>${cliente.statusPagamento || ""}</td>
-      <td>${diasParaVencer}</td>
-    `;
-
-    tabelaBody.appendChild(tr);
-  });
-}
-
-function calcularDiasParaVencer(dataISO) {
-  if (!dataISO) return "-";
-
-  const hoje = new Date();
-  const vencimento = new Date(dataISO + "T00:00:00");
-
-  hoje.setHours(0, 0, 0, 0);
-
-  const diferenca = vencimento - hoje;
-  return Math.ceil(diferenca / (1000 * 60 * 60 * 24));
-}
-
-function obterProximoVencimento(clientes) {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  const clientesComVencimento = clientes
-    .filter((cliente) => cliente.vencimento)
-    .filter((cliente) => {
-      const data = new Date(cliente.vencimento + "T00:00:00");
-      return !Number.isNaN(data.getTime());
-    })
-    .sort(
-      (a, b) =>
-        new Date(a.vencimento + "T00:00:00") -
-        new Date(b.vencimento + "T00:00:00")
-    );
-
-  if (clientesComVencimento.length === 0) {
-    return "-";
-  }
-
-  return formatarDataParaExibicao(clientesComVencimento[0].vencimento);
-}
-
-function formatarDataParaExibicao(dataISO) {
-  if (!dataISO) return "-";
-
-  const partes = dataISO.split("-");
-  if (partes.length !== 3) return dataISO;
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function converterDataParaInput(data) {
-  if (!data) return "";
-
-  if (data.includes("-")) {
-    return data;
-  }
-
-  if (data.includes("/")) {
-    const partes = data.split("/");
-    if (partes.length === 3) {
-      return `${partes[2]}-${partes[1]}-${partes[0]}`;
-    }
-  }
-
-  return data;
-=======
-document.addEventListener("DOMContentLoaded", async () => {
-  const btnEditar = document.getElementById("btn-editar");
-  const modal = document.getElementById("modal-editar");
-  const btnConfirmar = document.getElementById("btn-confirmar");
-  const btnCancelar = document.getElementById("btn-cancelar");
-
-  const inputNome = document.getElementById("edit-nome");
-  const inputCpf = document.getElementById("edit-cpf");
-  const inputVencimento = document.getElementById("edit-vencimento");
-  const inputStatus = document.getElementById("edit-status");
-
-  let cpfOriginal = null;
-
-  async function abrirModalEdicao() {
-    const radioSelecionado = document.querySelector('input[name="selecionado"]:checked');
-
-    if (!radioSelecionado) {
-      alert("Selecione um cliente para editar.");
-      return;
-    }
-
-    const cpfSelecionado = radioSelecionado.value;
-    const clientes = await obterClientes();
-    const cliente = clientes.find((item) => item.cpf === cpfSelecionado);
-
-    if (!cliente) {
-      alert("Cliente não encontrado.");
-      return;
-    }
-
-    cpfOriginal = cliente.cpf;
-    inputNome.value = cliente.nome || "";
-    inputCpf.value = cliente.cpf || "";
-    inputVencimento.value = converterDataParaInput(cliente.vencimento);
-    inputStatus.value = cliente.statusPagamento || "Pendente";
-
-    modal.classList.remove("hidden");
-  }
-
-  function fecharModal() {
-    modal.classList.add("hidden");
-    cpfOriginal = null;
-  }
-
-  async function salvarEdicao() {
-    if (!cpfOriginal) return;
-
-    const nome = inputNome.value.trim();
-    const cpf = inputCpf.value.trim();
-    const vencimento = inputVencimento.value;
-    const status = inputStatus.value;
-
-    if (!nome || !cpf || !vencimento || !status) {
-      alert("Preencha todos os campos.");
-      return;
-    }
-
-    const clientes = await obterClientes();
-    const clienteAtual = clientes.find((item) => item.cpf === cpfOriginal);
-
-    if (!clienteAtual) {
-      alert("Cliente não encontrado.");
-      return;
-    }
-
-    const cpfDuplicado = clientes.some(
-      (item) => item.cpf === cpf && item.cpf !== cpfOriginal
-    );
-
-    if (cpfDuplicado) {
-      alert("Já existe outro cliente com esse CPF.");
-      return;
-    }
-
-    const clienteAtualizado = {
-      ...clienteAtual,
-      nome: nome,
-      cpf: cpf,
-      vencimento: vencimento,
-      statusPagamento: status
-    };
-
-    await excluirCliente(cpfOriginal);
-    await adicionarClientes([clienteAtualizado]);
-
-    await renderizarDashboard();
-    fecharModal();
-  }
-
-  btnEditar.addEventListener("click", abrirModalEdicao);
-  btnCancelar.addEventListener("click", fecharModal);
-  btnConfirmar.addEventListener("click", salvarEdicao);
-
-  await renderizarDashboard();
-});
-
-async function renderizarDashboard() {
-  const clientes = await obterClientes();
-
-  atualizarCards(clientes);
-  renderizarTabelaDashboard(clientes);
-}
-
-function atualizarCards(clientes) {
-  const total = clientes.length;
-  const ativos = clientes.filter(
-    (cliente) => String(cliente.ativo || "").trim().toLowerCase() === "ativo"
-  ).length;
-
-  const inativos = clientes.filter(
-    (cliente) => String(cliente.ativo || "").trim().toLowerCase() === "inativo"
-  ).length;
-
-  const adimplentes = clientes.filter(
-    (cliente) => String(cliente.statusPagamento || "").trim().toLowerCase() === "pago"
-  ).length;
-
-  const inadimplentes = clientes.filter(
-    (cliente) => String(cliente.statusPagamento || "").trim().toLowerCase() !== "pago"
-  ).length;
-
-  document.getElementById("totalClientes").textContent = total;
-  document.getElementById("ativos").textContent = ativos;
-  document.getElementById("inativos").textContent = inativos;
-  document.getElementById("adimplentes").textContent = adimplentes;
-  document.getElementById("inadimplentes").textContent = inadimplentes;
-  document.getElementById("vencimento").textContent = obterProximoVencimento(clientes);
-}
-
-function renderizarTabelaDashboard(clientes) {
-  const tabelaBody = document.getElementById("tabela-body");
-
-  if (!tabelaBody) return;
-
-  tabelaBody.innerHTML = "";
-
-  clientes.forEach((cliente) => {
-    const tr = document.createElement("tr");
-    const diasParaVencer = calcularDiasParaVencer(cliente.vencimento);
-
-    tr.innerHTML = `
-      <td>
-        <input
-          type="radio"
-          name="selecionado"
-          value="${cliente.cpf}"
-        >
-      </td>
-      <td>${cliente.nome || ""}</td>
-      <td>${cliente.cpf || ""}</td>
-      <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-      <td>${cliente.statusPagamento || ""}</td>
-      <td>${diasParaVencer}</td>
-    `;
-
-    tabelaBody.appendChild(tr);
-  });
-}
-
-function calcularDiasParaVencer(dataISO) {
-  if (!dataISO) return "-";
-
-  const hoje = new Date();
-  const vencimento = new Date(dataISO + "T00:00:00");
-
-  hoje.setHours(0, 0, 0, 0);
-
-  const diferenca = vencimento - hoje;
-  return Math.ceil(diferenca / (1000 * 60 * 60 * 24));
-}
-
-function obterProximoVencimento(clientes) {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  const clientesComVencimento = clientes
-    .filter((cliente) => cliente.vencimento)
-    .filter((cliente) => {
-      const data = new Date(cliente.vencimento + "T00:00:00");
-      return !Number.isNaN(data.getTime());
-    })
-    .sort(
-      (a, b) =>
-        new Date(a.vencimento + "T00:00:00") -
-        new Date(b.vencimento + "T00:00:00")
-    );
-
-  if (clientesComVencimento.length === 0) {
-    return "-";
-  }
-
-  return formatarDataParaExibicao(clientesComVencimento[0].vencimento);
-}
-
-function formatarDataParaExibicao(dataISO) {
-  if (!dataISO) return "-";
-
-  const partes = dataISO.split("-");
-  if (partes.length !== 3) return dataISO;
-
-  return `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
-
-function converterDataParaInput(data) {
-  if (!data) return "";
-
-  if (data.includes("-")) {
-    return data;
-  }
-
-  if (data.includes("/")) {
-    const partes = data.split("/");
-    if (partes.length === 3) {
-      return `${partes[2]}-${partes[1]}-${partes[0]}`;
-    }
-  }
-
-  return data;
->>>>>>> 58a941ec0587124e61e141c1caab830110137ff8
-}

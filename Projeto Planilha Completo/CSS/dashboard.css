@@ -275,6 +275,18 @@ body{
     color: white;
 }
 
+#tabela-body tr {
+    cursor: pointer;
+    transition: 0.2s;
+}
 
+#tabela-body tr:hover td {
+    background-color: #d8f1ff;
+}
 
+#tabela-body tr.linha-selecionada td {
+    background-color: #81cafc;
+    color: #34495e;
+    font-weight: bold;
+}
    
