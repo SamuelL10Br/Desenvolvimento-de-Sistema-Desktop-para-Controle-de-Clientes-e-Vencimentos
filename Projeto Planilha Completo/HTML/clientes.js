@@ -331,7 +331,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      const confirmar = await window.uiFeedback.confirm(`Tem certeza que deseja excluir ${selecionados.length} cliente(s)?`);
+      const confirmar = await window.uiFeedback.confirm(
+        `Tem certeza que deseja excluir ${selecionados.length} cliente(s)?`
+      );
       if (!confirmar) return;
 
       for (const item of selecionados) {
@@ -389,29 +391,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function aplicarPesquisaClientes() {
     if (modalAberto()) return;
 
-    const termoTexto = normalizarTexto(pesquisa.value);
-    const termoCpf = limparCPF(pesquisa.value);
+    const valorPesquisa = pesquisa.value.trim();
+    const termoTexto = normalizarTexto(valorPesquisa);
+    const termoCpf = limparCPF(valorPesquisa);
     const clientes = await obterClientes();
 
-    if (!termoTexto && !termoCpf) {
-      await renderizarClientes(clientes);
+    if (!valorPesquisa) {
+      await renderizarClientes();
       return;
     }
 
     const filtrados = clientes.filter((cliente) => {
-      const nome = normalizarTexto(cliente.nome);
-      const cpf = limparCPF(cliente.cpf);
-      const email = normalizarTexto(cliente.email);
-      const telefone = normalizarTexto(cliente.telefone);
-      const endereco = normalizarTexto(cliente.endereco);
+      const nome = normalizarTexto(cliente.nome || "");
+      const cpf = limparCPF(cliente.cpf || "");
+      const email = normalizarTexto(cliente.email || "");
+      const telefone = normalizarTexto(cliente.telefone || "");
+      const endereco = normalizarTexto(cliente.endereco || "");
 
       return (
-        (termoTexto && (
-          nome.includes(termoTexto) ||
-          email.includes(termoTexto) ||
-          telefone.includes(termoTexto) ||
-          endereco.includes(termoTexto)
-        )) ||
+        nome.includes(termoTexto) ||
+        email.includes(termoTexto) ||
+        telefone.includes(termoTexto) ||
+        endereco.includes(termoTexto) ||
         (termoCpf && cpf.includes(termoCpf))
       );
     });
@@ -463,6 +464,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     timeoutPesquisa = setTimeout(() => {
       aplicarPesquisaClientes();
     }, 250);
+  });
+
+  pesquisa.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      aplicarPesquisaClientes();
+    }
   });
 
   await renderizarClientes();

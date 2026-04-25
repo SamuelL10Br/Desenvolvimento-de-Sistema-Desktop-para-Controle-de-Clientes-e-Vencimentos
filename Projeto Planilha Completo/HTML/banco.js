@@ -1,4 +1,5 @@
 const CHAVE_CLIENTES = "pex_clientes";
+const CHAVE_PROXIMO_VENCIMENTO_DASHBOARD = "pex_dashboard_proximo_vencimento";
 
 let filaOperacoes = Promise.resolve();
 
@@ -79,7 +80,7 @@ function normalizarCliente(cliente = {}) {
 async function obterClientes() {
   if (temApiElectron() && typeof window.api.obterClientes === "function") {
     const clientes = await window.api.obterClientes();
-    return Array.isArray(clientes) ? clientes : [];
+    return Array.isArray(clientes) ? clientes.map(normalizarCliente) : [];
   }
 
   const dados = localStorage.getItem(CHAVE_CLIENTES);
@@ -90,7 +91,7 @@ async function obterClientes() {
 
   try {
     const clientes = JSON.parse(dados);
-    return Array.isArray(clientes) ? clientes : [];
+    return Array.isArray(clientes) ? clientes.map(normalizarCliente) : [];
   } catch (erro) {
     console.error("Erro ao ler clientes do localStorage:", erro);
     return [];
@@ -185,7 +186,7 @@ async function atualizarCliente(cpf, dadosAtualizados) {
 
     const atualizados = clientes.map((cliente) => {
       if (limparCPF(cliente.cpf) !== cpfLimpo) {
-        return cliente;
+        return normalizarCliente(cliente);
       }
 
       return normalizarCliente({
@@ -195,6 +196,31 @@ async function atualizarCliente(cpf, dadosAtualizados) {
     });
 
     await salvarClientesDireto(atualizados);
+    return true;
+  });
+}
+
+async function obterProximoVencimentoDashboard() {
+  return enfileirarOperacao(async () => {
+    if (temApiElectron() && typeof window.api.storageGet === "function") {
+      const valor = await window.api.storageGet(CHAVE_PROXIMO_VENCIMENTO_DASHBOARD);
+      return typeof valor === "string" ? valor : "";
+    }
+
+    return localStorage.getItem(CHAVE_PROXIMO_VENCIMENTO_DASHBOARD) || "";
+  });
+}
+
+async function salvarProximoVencimentoDashboard(data) {
+  return enfileirarOperacao(async () => {
+    const dataNormalizada = normalizarData(data);
+
+    if (temApiElectron() && typeof window.api.storageSet === "function") {
+      await window.api.storageSet(CHAVE_PROXIMO_VENCIMENTO_DASHBOARD, dataNormalizada);
+      return true;
+    }
+
+    localStorage.setItem(CHAVE_PROXIMO_VENCIMENTO_DASHBOARD, dataNormalizada);
     return true;
   });
 }

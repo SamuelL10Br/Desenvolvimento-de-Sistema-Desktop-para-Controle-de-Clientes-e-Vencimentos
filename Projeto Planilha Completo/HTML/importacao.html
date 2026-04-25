@@ -50,12 +50,16 @@
     <h2 class="titulo">EXPORTAÇÃO DE DADOS DOS CLIENTES</h2>
 
     <div class="barra-acoes barra-principal">
-      <input
-        type="text"
-        id="campoFiltro"
-        placeholder="Digite um termo opcional para pesquisar nos campos marcados"
-        autocomplete="off"
-      >
+      <div class="campo-pesquisa campo-pesquisa-exportacao">
+        <input
+          type="text"
+          class="pesquisa"
+          id="campoFiltro"
+          placeholder="Pesquisar cliente - nome/CPF"
+          autocomplete="off"
+        >
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
 
       <button class="btn" id="btnExportarJson" type="button">Exportar JSON</button>
       <button class="btn" id="btnExportarCsv" type="button">Exportar CSV</button>
@@ -76,33 +80,31 @@
         <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="valor" checked><span>Valor</span></label>
         <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="ativo" checked><span>Ativo/Inativo</span></label>
         <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="vencimento" checked><span>Vencimento</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="email" checked><span>Email</span></label>
+        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="email" checked><span>E-mail</span></label>
         <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="diaVenc" checked><span>Dia/Venc</span></label>
         <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="telefone" checked><span>Telefone/Whatsapp</span></label>
         <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="endereco" checked><span>Endereço</span></label>
       </div>
     </div>
 
-    <div class="tabela-wrapper">
-      <table id="tabelaClientes">
-        <thead>
-          <tr>
-            <th data-coluna="nome">Nome</th>
-            <th data-coluna="cpf">CPF</th>
-            <th data-coluna="email">E-mail</th>
-            <th data-coluna="telefone">Telefone/Whatsapp</th>
-            <th data-coluna="endereco">Endereço</th>
-            <th data-coluna="valor">Valor</th>
-            <th data-coluna="vencimento">Vencimento</th>
-            <th data-coluna="diaVenc">Dia/Venc</th>
-            <th data-coluna="status">Status</th>
-            <th data-coluna="ativo">Ativo/Inativo</th>
-            <th data-coluna="ultimoPagamento">Último Pagamento</th>
-          </tr>
-        </thead>
-        <tbody id="corpoTabelaClientes"></tbody>
-      </table>
-    </div>
+    <table id="tabelaClientes" class="tabela-clientes">
+      <thead>
+        <tr>
+          <th data-coluna="nome">Nome</th>
+          <th data-coluna="cpf">CPF</th>
+          <th data-coluna="email">E-mail</th>
+          <th data-coluna="telefone">Telefone/Whatsapp</th>
+          <th data-coluna="endereco">Endereço</th>
+          <th data-coluna="valor">Valor</th>
+          <th data-coluna="vencimento">Vencimento</th>
+          <th data-coluna="diaVenc">Dia/Venc</th>
+          <th data-coluna="status">Status</th>
+          <th data-coluna="ativo">Ativo/Inativo</th>
+          <th data-coluna="ultimoPagamento">Último pagamento</th>
+        </tr>
+      </thead>
+      <tbody id="corpoTabelaClientes"></tbody>
+    </table>
   </div>
 
   <script src="ui-feedback.js"></script>

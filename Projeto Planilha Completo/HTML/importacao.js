@@ -30,9 +30,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  btnExportarJson.addEventListener("click", () => exportarDados("json"));
-  btnExportarCsv.addEventListener("click", () => exportarDados("csv"));
-  btnExportarExcel.addEventListener("click", () => exportarDados("xlsx"));
+  if (btnExportarJson) {
+    btnExportarJson.addEventListener("click", () => exportarDados("json"));
+  }
+
+  if (btnExportarCsv) {
+    btnExportarCsv.addEventListener("click", () => exportarDados("csv"));
+  }
+
+  if (btnExportarExcel) {
+    btnExportarExcel.addEventListener("click", () => exportarDados("xlsx"));
+  }
 });
 
 async function carregarClientes() {
@@ -41,9 +49,12 @@ async function carregarClientes() {
     clientesOriginais = Array.isArray(clientes) ? clientes : [];
     clientesFiltrados = [...clientesOriginais];
     renderizarTabela(clientesFiltrados);
+    aplicarVisibilidadeColunas();
   } catch (erro) {
     console.error("Erro ao carregar clientes:", erro);
-    window.uiFeedback.error("Erro ao carregar os dados dos clientes.");
+    if (window.uiFeedback?.error) {
+      window.uiFeedback.error("Erro ao carregar os dados dos clientes.");
+    }
   }
 }
 
@@ -80,18 +91,21 @@ function formatarTelefone(telefone) {
   if (numeros.length <= 10) {
     return numeros.replace(
       /^(\d{2})(\d{4})(\d{0,4}).*/,
-      (_, ddd, parte1, parte2) => parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`
+      (_, ddd, parte1, parte2) =>
+        parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`
     );
   }
 
   return numeros.replace(
     /^(\d{2})(\d{5})(\d{0,4}).*/,
-    (_, ddd, parte1, parte2) => parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`
+    (_, ddd, parte1, parte2) =>
+      parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`
   );
 }
 
 function converterDataParaInput(data) {
   if (!data) return "";
+
   const texto = String(data).trim();
 
   if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
@@ -154,23 +168,19 @@ function formatarMoeda(valor) {
   });
 }
 
-function obterValorCampo(cliente, chaves) {
-  for (const chave of chaves) {
-    if (
-      Object.prototype.hasOwnProperty.call(cliente, chave) &&
-      cliente[chave] !== undefined &&
-      cliente[chave] !== null &&
-      String(cliente[chave]).trim() !== ""
-    ) {
-      return cliente[chave];
+function obterValorCampo(cliente, nomesCampos) {
+  for (const nome of nomesCampos) {
+    if (cliente[nome] !== undefined && cliente[nome] !== null && cliente[nome] !== "") {
+      return cliente[nome];
     }
   }
   return "";
 }
 
 function obterCamposSelecionados() {
-  const checkboxes = document.querySelectorAll(".filtro-campo:checked");
-  return Array.from(checkboxes).map((item) => item.value);
+  return Array.from(document.querySelectorAll(".filtro-campo:checked")).map(
+    (checkbox) => checkbox.value
+  );
 }
 
 function aplicarVisibilidadeColunas() {
@@ -189,7 +199,7 @@ function aplicarVisibilidadeColunas() {
 
 function aplicarFiltro() {
   const campoTexto = document.getElementById("campoFiltro");
-  const termoOriginal = campoTexto.value.trim();
+  const termoOriginal = campoTexto ? campoTexto.value.trim() : "";
   const termoTexto = normalizarTexto(termoOriginal);
   const termoCpf = limparCPF(termoOriginal);
   const camposSelecionados = obterCamposSelecionados();
@@ -216,12 +226,18 @@ function aplicarFiltro() {
       telefone: normalizarTexto(obterValorCampo(cliente, ["telefone", "telefoneWhatsapp"])),
       endereco: normalizarTexto(obterValorCampo(cliente, ["endereco"])),
       valor: normalizarTexto(formatarMoeda(obterValorCampo(cliente, ["valor"]))),
-      vencimento: normalizarTexto(formatarDataParaExibicao(obterValorCampo(cliente, ["vencimento"]))),
-      diaVenc: normalizarTexto(obterDiaVencimento(obterValorCampo(cliente, ["vencimento"]))),
+      vencimento: normalizarTexto(
+        formatarDataParaExibicao(obterValorCampo(cliente, ["vencimento"]))
+      ),
+      diaVenc: normalizarTexto(
+        obterDiaVencimento(obterValorCampo(cliente, ["vencimento"]))
+      ),
       status: normalizarTexto(obterValorCampo(cliente, ["statusPagamento", "status"])),
       ativo: normalizarTexto(obterValorCampo(cliente, ["ativo", "situacao"])),
       ultimoPagamento: normalizarTexto(
-        formatarDataParaExibicao(obterValorCampo(cliente, ["ultimoPagamento", "ultimo_pagamento"]))
+        formatarDataParaExibicao(
+          obterValorCampo(cliente, ["ultimoPagamento", "ultimo_pagamento"])
+        )
       )
     };
 
@@ -241,7 +257,16 @@ function aplicarFiltro() {
 }
 
 function renderizarTabela(clientes) {
-  const corpoTabela = document.getElementById("corpoTabelaClientes");
+  const corpoTabela =
+    document.getElementById("corpoTabelaClientes") ||
+    document.getElementById("tabela-body") ||
+    document.querySelector("#tabelaClientes tbody");
+
+  if (!corpoTabela) {
+    console.error("Corpo da tabela não encontrado.");
+    return;
+  }
+
   corpoTabela.innerHTML = "";
 
   if (!clientes.length) {
@@ -299,11 +324,17 @@ function prepararDadosExportacao(clientes) {
       nome: obterValorCampo(cliente, ["nome"]) || "",
       cpf: formatarCPF(obterValorCampo(cliente, ["cpf"]) || ""),
       email: obterValorCampo(cliente, ["email"]) || "",
-      telefone: formatarTelefone(obterValorCampo(cliente, ["telefone", "telefoneWhatsapp"]) || ""),
+      telefone: formatarTelefone(
+        obterValorCampo(cliente, ["telefone", "telefoneWhatsapp"]) || ""
+      ),
       endereco: obterValorCampo(cliente, ["endereco"]) || "",
       valor: formatarMoeda(obterValorCampo(cliente, ["valor"]) || ""),
-      vencimento: formatarDataParaExibicao(obterValorCampo(cliente, ["vencimento"]) || ""),
-      diaVenc: obterDiaVencimento(obterValorCampo(cliente, ["vencimento"]) || ""),
+      vencimento: formatarDataParaExibicao(
+        obterValorCampo(cliente, ["vencimento"]) || ""
+      ),
+      diaVenc: obterDiaVencimento(
+        obterValorCampo(cliente, ["vencimento"]) || ""
+      ),
       status: obterValorCampo(cliente, ["statusPagamento", "status"]) || "",
       ativo: obterValorCampo(cliente, ["ativo", "situacao"]) || "",
       ultimoPagamento: formatarDataParaExibicao(
@@ -341,12 +372,16 @@ function exportarDados(tipo) {
   const camposSelecionados = obterCamposSelecionados();
 
   if (!camposSelecionados.length) {
-    window.uiFeedback.error("Selecione pelo menos um campo para exportar.");
+    if (window.uiFeedback?.error) {
+      window.uiFeedback.error("Selecione pelo menos um campo para exportar.");
+    }
     return;
   }
 
   if (!clientesFiltrados.length) {
-    window.uiFeedback.error("Nenhum cliente para exportar.");
+    if (window.uiFeedback?.error) {
+      window.uiFeedback.error("Nenhum cliente para exportar.");
+    }
     return;
   }
 
@@ -370,8 +405,12 @@ function exportarJSON(clientes) {
   const blob = new Blob([JSON.stringify(dados, null, 2)], {
     type: "application/json"
   });
+
   baixarArquivo(blob, "clientes.json");
-  window.uiFeedback.success("Arquivo JSON exportado com sucesso.");
+
+  if (window.uiFeedback?.success) {
+    window.uiFeedback.success("Arquivo JSON exportado com sucesso.");
+  }
 }
 
 function exportarCSV(clientes) {
@@ -397,10 +436,21 @@ function exportarCSV(clientes) {
   });
 
   baixarArquivo(blob, "clientes.csv");
-  window.uiFeedback.success("Arquivo CSV exportado com sucesso.");
+
+  if (window.uiFeedback?.success) {
+    window.uiFeedback.success("Arquivo CSV exportado com sucesso.");
+  }
 }
 
 function exportarExcel(clientes) {
+  if (typeof XLSX === "undefined") {
+    console.error("Biblioteca XLSX não carregada.");
+    if (window.uiFeedback?.error) {
+      window.uiFeedback.error("Erro ao exportar Excel. Biblioteca XLSX não encontrada.");
+    }
+    return;
+  }
+
   const dados = prepararDadosExportacao(clientes);
   const camposSelecionados = obterCamposSelecionados();
   const rotulos = obterRotulosCampos();
@@ -420,19 +470,21 @@ function exportarExcel(clientes) {
 
   XLSX.utils.book_append_sheet(workbook, planilha, "Clientes");
   XLSX.writeFile(workbook, "clientes.xlsx");
-  window.uiFeedback.success("Arquivo Excel exportado com sucesso.");
+
+  if (window.uiFeedback?.success) {
+    window.uiFeedback.success("Arquivo Excel exportado com sucesso.");
+  }
 }
 
-function baixarArquivo(blob, nome) {
+function baixarArquivo(blob, nomeArquivo) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
   link.href = url;
-  link.download = nome;
-
+  link.download = nomeArquivo;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
 
   URL.revokeObjectURL(url);
 }

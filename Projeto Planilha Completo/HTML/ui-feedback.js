@@ -1,10 +1,13 @@
 (function () {
+  console.log("UI-FEEDBACK-CARREGADO-VERSAO-LIMPA");
+
   function garantirToastContainer() {
     let container = document.getElementById("toast-container");
 
     if (!container) {
       container = document.createElement("div");
       container.id = "toast-container";
+      container.style.pointerEvents = "none";
       document.body.appendChild(container);
     }
 
@@ -17,6 +20,7 @@
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
+    toast.style.pointerEvents = "none";
 
     container.appendChild(toast);
 
@@ -32,39 +36,63 @@
     }, duration);
   }
 
+  function garantirConfirmOverlay() {
+    let overlay = document.getElementById("confirm-overlay");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "confirm-overlay";
+      overlay.innerHTML = `
+        <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+          <h3 id="confirm-title">Confirmação</h3>
+          <p id="confirm-message"></p>
+          <div class="confirm-actions">
+            <button id="confirm-no" type="button">Cancelar</button>
+            <button id="confirm-yes" type="button">Confirmar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    overlay.classList.remove("confirm-open");
+    overlay.style.pointerEvents = "none";
+    return overlay;
+  }
+
+  function limparEstadoOverlay(overlay) {
+    if (!overlay) return;
+
+    overlay.classList.remove("confirm-open");
+    overlay.style.pointerEvents = "none";
+    document.body.classList.remove("modal-aberto");
+  }
+
   function confirmBox(message) {
     return new Promise((resolve) => {
-      let overlay = document.getElementById("confirm-overlay");
-
-      if (!overlay) {
-        overlay = document.createElement("div");
-        overlay.id = "confirm-overlay";
-        overlay.innerHTML = `
-          <div class="confirm-box">
-            <h3>Confirmação</h3>
-            <p id="confirm-message"></p>
-            <div class="confirm-actions">
-              <button id="confirm-no" type="button">Cancelar</button>
-              <button id="confirm-yes" type="button">Confirmar</button>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(overlay);
-      }
-
+      const overlay = garantirConfirmOverlay();
       const msg = overlay.querySelector("#confirm-message");
       const btnNo = overlay.querySelector("#confirm-no");
       const btnYes = overlay.querySelector("#confirm-yes");
 
       msg.textContent = message;
       overlay.classList.add("confirm-open");
+      overlay.style.pointerEvents = "auto";
       document.body.classList.add("modal-aberto");
 
+      let finalizado = false;
+
       function fechar(resultado) {
-        overlay.classList.remove("confirm-open");
-        document.body.classList.remove("modal-aberto");
+        if (finalizado) return;
+        finalizado = true;
+
+        limparEstadoOverlay(overlay);
+
         btnNo.removeEventListener("click", onNo);
         btnYes.removeEventListener("click", onYes);
+        overlay.removeEventListener("click", onOverlayClick);
+        document.removeEventListener("keydown", onKeyDown);
+
         resolve(resultado);
       }
 
@@ -76,8 +104,26 @@
         fechar(true);
       }
 
+      function onOverlayClick(event) {
+        if (event.target === overlay) {
+          fechar(false);
+        }
+      }
+
+      function onKeyDown(event) {
+        if (event.key === "Escape") {
+          fechar(false);
+        }
+      }
+
       btnNo.addEventListener("click", onNo);
       btnYes.addEventListener("click", onYes);
+      overlay.addEventListener("click", onOverlayClick);
+      document.addEventListener("keydown", onKeyDown);
+
+      requestAnimationFrame(() => {
+        btnNo.focus();
+      });
     });
   }
 

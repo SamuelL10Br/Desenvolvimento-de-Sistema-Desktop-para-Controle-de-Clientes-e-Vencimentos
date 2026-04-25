@@ -1,4 +1,3 @@
-/* Estilização do corpo da página */
 body{
     background-color: rgb(215, 248, 250);
     background: url('../Imagens/fundo5.png');
@@ -7,15 +6,15 @@ body{
     background-position: center;
     background-attachment: fixed;
     margin:0;
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     text-align: center;
     align-items: center;
 }
 
-/* Estilização das barras de rolagem */
 * {
+    box-sizing: border-box;
     scrollbar-width: auto;
-    scrollbar-color: #34495e rgb(215, 248, 250); 
+    scrollbar-color: #34495e rgb(215, 248, 250);
 }
 
 ::-webkit-scrollbar {
@@ -36,170 +35,239 @@ body{
     background-color: #81cafc;
 }
 
-/* Estilização da barra lateral */
 .opcoes{
-    width:220px;
-    height:100vh;
+    width: 240px;
+    height: 100vh;
     color: #34495e;
-    background:#81cafc;
-    position:fixed;
-    padding:20px;
+    background: #81cafc;
+    position: fixed;
+    inset: 0 auto 0 0;
+    padding: 22px 20px;
     text-align: center;
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.08);
+    z-index: 50;
 }
 
 .opcoes h2{
     font-family: 'Montserrat', sans-serif;
     margin: 0;
-    padding: 40px;
+    padding: 42px 0 34px;
     text-align: center;
+    letter-spacing: 0.5px;
 }
 
-/* Estilização dos links inativos */
-.nao-ativo{
-    display:flex;
-    color: rgb(215, 248, 250);
-    padding: 10px 15px;
-    text-decoration:none;
-    align-items: center;
-    text-align: center;
-    justify-content: center;
-    background-color: #34495e;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    transition: 0.3s;
-    font-size: 16px;
-    gap: 10px;
-    position: relative;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.nao-ativo i{
-    position: absolute;
-    left: 12px;
-    color:#81cafc;
-}
-
-/* Estilização dos links ativos */
+.nao-ativo,
 .menu-ativo{
-    display:flex;
-    color: #34495e;
-    padding: 10px 15px;
-    text-decoration:none;
+    display: flex;
     align-items: center;
-    text-align: center;
-    justify-content: center;
-    background-color: rgb(215, 248, 250);
-    margin-bottom: 10px;
-    border-radius: 5px;
-    transition: 0.3s;
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+    min-height: 54px;
+    padding: 12px 16px;
+    text-decoration: none;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    transition: 0.25s ease;
     font-size: 16px;
-    gap: 10px;
-    position: relative;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.18);
+    text-align: left;
+    line-height: 1.2;
 }
 
+.nao-ativo{
+    color: rgb(215, 248, 250);
+    background-color: #34495e;
+}
+
+.menu-ativo{
+    color: #34495e;
+    background-color: rgb(215, 248, 250);
+}
+
+.nao-ativo i,
 .menu-ativo i{
-    position: absolute;
-    left: 12px;
-    color:#81cafc;
+    position: static;
+    width: 20px;
+    min-width: 20px;
+    text-align: center;
+    color: #81cafc;
+    font-size: 16px;
 }
 
 .nao-ativo:hover{
-    background:rgb(215, 248, 250);
+    background: rgb(215, 248, 250);
     color: #34495e;
+    transform: translateY(-1px);
 }
 
 .menu-ativo:hover{
-    color:rgb(215, 248, 250);
+    color: rgb(215, 248, 250);
     background-color: #34495e;
+    transform: translateY(-1px);
 }
 
-/* Estilização do conteúdo da página */
 .conteudo{
-    margin-left: 250px; /* espaço da barra lateral */
+    margin-left: 260px;
     display: flex;
     flex-direction: column;
-    align-items: center; /* centraliza horizontalmente */
-    padding-top: 40px;
+    align-items: center;
+    padding: 40px 24px 24px;
     margin-bottom: 20px;
 }
 
 .titulo{
     font-family: 'Montserrat', sans-serif;
     margin: 0;
-    padding-top: 30px;
-    padding-bottom: 30px;
+    padding-top: 26px;
+    padding-bottom: 26px;
     text-align: center;
     color: #34495e;
     font-size: 22px;
-    margin-top: 0px;
 }
 
-/* Estilização dos cartões de informações resumidas */
+.cards-dashboard{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 26px;
+}
+
 .cards{
     display: flex;
-    gap: 25px;
+    gap: 22px;
     flex-wrap: wrap;
     justify-content: center;
-    margin-bottom: 30px;
-    margin-top: 15px;
+    margin: 0;
+}
+
+.cards-principais{
+    max-width: 1020px;
 }
 
 .card{
-    background-color: #34495e;
+    background: linear-gradient(180deg, #3b536b 0%, #34495e 100%);
     color: rgb(215, 248, 250);
-    padding: 20px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    border-radius: 10px;
-    width: 100px;
+    padding: 18px 16px;
+    border-radius: 18px;
+    width: 132px;
+    min-height: 122px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 20px rgba(52, 73, 94, 0.16);
     font-size: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.valor {
-    padding-top: 0px;
-    margin-top: 0px;
+.card p{
+    margin: 0;
 }
 
-/* Estilização da tabela de clientes */
+.card p:first-child{
+    font-size: 15px;
+    line-height: 1.25;
+}
+
+.valor{
+    font-size: 31px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.bloco-proximo-vencimento{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+    box-shadow: none;
+}
+
+.card-destaque{
+    width: 210px;
+    min-height: 142px;
+    background: linear-gradient(180deg, #3b536b 0%, #34495e 100%);
+}
+
+.card-destaque .valor{
+    font-size: 26px;
+}
+
+.btn{
+    background-color: #34495e;
+    color: rgb(215, 248, 250);
+    border: none;
+    padding: 12px 18px;
+    border-radius: 14px;
+    cursor: pointer;
+    border: 2px solid #34495e;
+    font-size: 15px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn:hover{
+    background-color: rgb(215, 248, 250);
+    color: #34495e;
+    border: 2px solid #34495e;
+    transform: translateY(-1px);
+}
+
+.btn i{
+    color: #81cafc;
+}
+
+.btn-vencimento{
+    min-width: 230px;
+}
+
 .tabela-clientes{
     background: #34495e;
     padding: 10px;
-    border-radius: 10px;
-    margin-top: 15px; 
+    border-radius: 18px;
+    margin-top: 10px;
     margin-bottom: 20px;
     width: fit-content;
-    max-width: 90%;
+    max-width: 95%;
     border-collapse: separate;
     border-spacing: 5px;
     display: block;
-    max-height: 400px;
+    max-height: 420px;
     overflow: auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
 }
 
 .tabela-clientes th{
     background: #81cafc;
     color: #34495e;
-    padding: 5px;
-    border-radius: 5px;
+    padding: 8px 10px;
+    border-radius: 10px;
     font-size: 16px;
     position: sticky;
-    top: 0px;
-    box-shadow: 0 0 0px 5px #34495e;
+    top: 0;
+    box-shadow: 0 0 0 5px #34495e;
 }
 
 .tabela-clientes td{
     background: rgb(215, 248, 250);
     color: #34495e;
-    padding: 5px;
-    border-radius: 8px;
+    padding: 7px 10px;
+    border-radius: 10px;
     text-align: center;
     font-size: 15px;
     word-wrap: break-word;
@@ -209,15 +277,13 @@ body{
 
 .modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0, 0, 0, 0.45);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 999;
+    z-index: 9999;
+    padding: 20px;
 }
 
 .hidden {
@@ -227,9 +293,9 @@ body{
 .modal-conteudo {
     background: #ffffff;
     width: 420px;
-    max-width: 90%;
+    max-width: 92%;
     padding: 24px;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     text-align: left;
 }
@@ -238,6 +304,7 @@ body{
     margin-bottom: 18px;
     color: #34495e;
     text-align: center;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .modal-conteudo label {
@@ -269,10 +336,17 @@ body{
     flex: 1;
     padding: 10px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     background-color: #34495e;
     color: white;
+    transition: all 0.2s ease;
+}
+
+.botoes-modal button:hover {
+    background: #81cafc;
+    color: #34495e;
+    transform: translateY(-1px);
 }
 
 #tabela-body tr {
@@ -289,4 +363,32 @@ body{
     color: #34495e;
     font-weight: bold;
 }
-   
+
+@media (max-width: 1100px){
+    .cards-principais{
+        max-width: 760px;
+    }
+}
+
+@media (max-width: 860px){
+    .opcoes{
+        position: relative;
+        width: 100%;
+        height: auto;
+    }
+
+    .conteudo{
+        margin-left: 0;
+        padding: 24px 16px;
+    }
+
+    .tabela-clientes{
+        max-width: 100%;
+    }
+
+    .nao-ativo,
+    .menu-ativo{
+        justify-content: center;
+        text-align: center;
+    }
+}

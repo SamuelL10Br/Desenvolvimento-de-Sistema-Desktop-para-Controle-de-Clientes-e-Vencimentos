@@ -88,20 +88,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     return `${dia}/${mes}/${ano}`;
   }
 
-  function calcularDiasAtrasoAutomatico(data) {
+  function criarDataLocal(data) {
     const dataConvertida = converterDataParaInput(data);
 
-    if (!dataConvertida) return 0;
+    if (!dataConvertida) return null;
 
-    const hoje = new Date();
-    const vencimento = new Date(`${dataConvertida}T00:00:00`);
-
-    hoje.setHours(0, 0, 0, 0);
-
-    const diferenca = hoje - vencimento;
-    const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
-
-    return dias > 0 ? dias : 0;
+    const dataLocal = new Date(`${dataConvertida}T00:00:00`);
+    return Number.isNaN(dataLocal.getTime()) ? null : dataLocal;
   }
 
   function formatarMoeda(valor) {
@@ -139,6 +132,89 @@ document.addEventListener("DOMContentLoaded", async () => {
     return Number.isNaN(numero) ? null : numero;
   }
 
+  function obterStatusAutomatico(vencimento, ultimoPagamento = "") {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const dataVencimento = criarDataLocal(vencimento);
+    const dataPagamento = criarDataLocal(ultimoPagamento);
+
+    if (!dataVencimento) {
+      return "Pendente";
+    }
+
+    if (dataPagamento && dataPagamento.getTime() >= dataVencimento.getTime()) {
+      return "Pago";
+    }
+
+    if (hoje.getTime() > dataVencimento.getTime()) {
+      return "Atrasado";
+    }
+
+    return "Pendente";
+  }
+
+  function obterDiasSituacao(vencimento, ultimoPagamento = "") {
+    const status = obterStatusAutomatico(vencimento, ultimoPagamento);
+
+    if (status === "Pago") {
+      return "Pago";
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const dataVencimento = criarDataLocal(vencimento);
+
+    if (!dataVencimento) {
+      return "-";
+    }
+
+    const diferenca = dataVencimento.getTime() - hoje.getTime();
+    const dias = Math.abs(Math.floor(diferenca / (1000 * 60 * 60 * 24)));
+
+    if (status === "Atrasado") {
+      return `${dias} dias em atraso`;
+    }
+
+    return `${dias} dias para vencer`;
+  }
+
+  function obterDiasAtrasoNumerico(vencimento, ultimoPagamento = "") {
+    const status = obterStatusAutomatico(vencimento, ultimoPagamento);
+
+    if (status !== "Atrasado") {
+      return 0;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const dataVencimento = criarDataLocal(vencimento);
+
+    if (!dataVencimento) {
+      return 0;
+    }
+
+    const diferenca = hoje.getTime() - dataVencimento.getTime();
+    const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+
+    return dias > 0 ? dias : 0;
+  }
+
+  function atualizarCamposAutomaticos() {
+    const status = obterStatusAutomatico(
+      inputVencimento.value,
+      inputUltimoPagamento.value
+    );
+
+    inputStatus.value = status;
+    inputAtraso.value = obterDiasSituacao(
+      inputVencimento.value,
+      inputUltimoPagamento.value
+    );
+  }
+
   async function obterPagamentoSelecionado() {
     const selecionado = document.querySelector('input[name="pagamentoSelecionado"]:checked');
     if (!selecionado) return null;
@@ -164,20 +240,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       inputCpf.value = limparCPF(cliente.cpf || "");
       inputValor.value = formatarMoedaSemSimbolo(cliente.valor);
       inputVencimento.value = converterDataParaInput(cliente.vencimento);
-      inputStatus.value = cliente.statusPagamento || "Pendente";
       inputAtivo.value = cliente.ativo || "Ativo";
       inputUltimoPagamento.value = converterDataParaInput(cliente.ultimoPagamento);
 
-      if (
-        cliente.diasAtrasoManual !== undefined &&
-        cliente.diasAtrasoManual !== null &&
-        cliente.diasAtrasoManual !== ""
-      ) {
-        inputAtraso.value = cliente.diasAtrasoManual;
-      } else {
-        inputAtraso.value = calcularDiasAtrasoAutomatico(cliente.vencimento);
-      }
-
+      atualizarCamposAutomaticos();
       abrirModal();
     } catch (erro) {
       console.error("Erro ao abrir edição de pagamento:", erro);
@@ -193,10 +259,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const cpf = limparCPF(inputCpf.value);
       const valor = converterValorParaNumero(inputValor.value);
       const vencimento = inputVencimento.value;
-      const statusPagamento = inputStatus.value;
       const ativo = inputAtivo.value;
       const ultimoPagamento = inputUltimoPagamento.value;
-      const diasAtrasoManual = inputAtraso.value === "" ? "" : Number(inputAtraso.value);
+
+      const statusPagamento = obterStatusAutomatico(vencimento, ultimoPagamento);
+      const diasAtrasoManual = obterDiasAtrasoNumerico(vencimento, ultimoPagamento);
 
       if (!nome || !cpf || cpf.length !== 11) {
         window.uiFeedback.error("Nome e CPF válidos são obrigatórios.");
@@ -260,12 +327,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     clientesOrdenados.forEach((cliente) => {
       const tr = document.createElement("tr");
 
-      const atrasoExibido =
-        cliente.diasAtrasoManual !== undefined &&
-        cliente.diasAtrasoManual !== null &&
-        cliente.diasAtrasoManual !== ""
-          ? cliente.diasAtrasoManual
-          : calcularDiasAtrasoAutomatico(cliente.vencimento);
+      const statusCalculado = obterStatusAutomatico(
+        cliente.vencimento,
+        cliente.ultimoPagamento
+      );
+
+      const diasSituacao = obterDiasSituacao(
+        cliente.vencimento,
+        cliente.ultimoPagamento
+      );
 
       tr.innerHTML = `
         <td><input type="radio" name="pagamentoSelecionado" value="${limparCPF(cliente.cpf)}"></td>
@@ -273,10 +343,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${formatarCPF(cliente.cpf || "")}</td>
         <td>${formatarMoeda(cliente.valor)}</td>
         <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-        <td>${cliente.statusPagamento || "Pendente"}</td>
+        <td>${statusCalculado}</td>
         <td>${cliente.ativo || "Ativo"}</td>
         <td>${formatarDataParaExibicao(cliente.ultimoPagamento)}</td>
-        <td>${atrasoExibido}</td>
+        <td>${diasSituacao}</td>
       `;
 
       tabelaBody.appendChild(tr);
@@ -286,23 +356,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function aplicarPesquisaPagamentos() {
     if (modalAberto()) return;
 
-    const termoTexto = normalizarTexto(pesquisa.value);
-    const termoCpf = limparCPF(pesquisa.value);
+    const valorPesquisa = pesquisa.value.trim();
+    const termoTexto = normalizarTexto(valorPesquisa);
+    const termoCpf = limparCPF(valorPesquisa);
     const clientes = await obterClientes();
 
-    if (!termoTexto && !termoCpf) {
-      await renderizarPagamentos(clientes);
+    if (!valorPesquisa) {
+      await renderizarPagamentos();
       return;
     }
 
     const filtrados = clientes.filter((cliente) => {
-      const nome = normalizarTexto(cliente.nome);
-      const cpf = limparCPF(cliente.cpf);
+      const nome = normalizarTexto(cliente.nome || "");
+      const cpf = limparCPF(cliente.cpf || "");
 
-      const buscaPorNome = termoTexto ? nome.includes(termoTexto) : false;
-      const buscaPorCpf = termoCpf ? cpf.includes(termoCpf) : false;
-
-      return buscaPorNome || buscaPorCpf;
+      return nome.includes(termoTexto) || (termoCpf && cpf.includes(termoCpf));
     });
 
     await renderizarPagamentos(filtrados);
@@ -329,13 +397,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     inputValor.value = valor === null ? "" : formatarMoedaSemSimbolo(valor);
   });
 
+  inputVencimento.addEventListener("change", atualizarCamposAutomaticos);
+  inputUltimoPagamento.addEventListener("change", atualizarCamposAutomaticos);
+
   pesquisa.addEventListener("input", () => {
     if (modalAberto()) return;
 
     clearTimeout(timeoutPesquisa);
     timeoutPesquisa = setTimeout(() => {
       aplicarPesquisaPagamentos();
-    }, 250);
+    }, 200);
+  });
+
+  pesquisa.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      aplicarPesquisaPagamentos();
+    }
   });
 
   await renderizarPagamentos();

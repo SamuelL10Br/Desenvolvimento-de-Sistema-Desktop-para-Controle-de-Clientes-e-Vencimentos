@@ -5,21 +5,18 @@
   "main": "main.js",
   "author": "Samuel Luciano",
   "license": "MIT",
-
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win"
   },
-
   "devDependencies": {
-    "electron": "^30.0.0",
+    "@electron/rebuild": "^4.0.3",
+    "electron": "28.3.3",
     "electron-builder": "^24.13.3"
   },
-
   "build": {
     "appId": "com.samuel.sistemaclientespex",
     "productName": "Sistema Clientes PEX",
-
     "files": [
       "main.js",
       "preload.js",
@@ -28,11 +25,9 @@
       "Imagens/**/*",
       "package.json"
     ],
-
     "win": {
       "target": "nsis"
     },
-
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
