@@ -1,476 +1,474 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const btnNovo = document.getElementById("btn-novo");
-  const btnEditar = document.getElementById("btn-editar");
-  const btnExcluir = document.getElementById("btn-excluir");
-  const btnCancelar = document.getElementById("btn-cancelar");
-  const btnConfirmar = document.getElementById("btn-confirmar");
-  const modal = document.getElementById("modal-cliente");
-  const modalTitulo = document.getElementById("modal-titulo");
-  const pesquisa = document.getElementById("pesquisa");
+let modoEdicao = false;
+let cpfOriginal = "";
+let clientesCache = [];
 
-  const inputNome = document.getElementById("input-nome");
-  const inputCpf = document.getElementById("input-cpf");
-  const inputTelefone = document.getElementById("input-telefone");
-  const inputEndereco = document.getElementById("input-endereco");
-  const inputEmail = document.getElementById("input-email");
-  const inputValor = document.getElementById("input-valor");
-  const inputVencimento = document.getElementById("input-vencimento");
-  const inputStatusPagamento = document.getElementById("input-status-pagamento");
-  const inputAtivo = document.getElementById("input-ativo");
-  const inputUltimoPagamento = document.getElementById("input-ultimo-pagamento");
+function garantirToastContainer() {
+  let container = document.getElementById("toast-container");
 
-  let modoEdicao = false;
-  let cpfOriginal = null;
-  let timeoutPesquisa = null;
-
-  function modalAberto() {
-    return !modal.classList.contains("hidden");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toast-container";
+    document.body.appendChild(container);
   }
 
-  function limparFormulario() {
-    inputNome.value = "";
-    inputCpf.value = "";
-    inputTelefone.value = "";
-    inputEndereco.value = "";
-    inputEmail.value = "";
-    inputValor.value = "";
-    inputVencimento.value = "";
-    inputStatusPagamento.value = "Pendente";
-    inputAtivo.value = "Ativo";
-    inputUltimoPagamento.value = "";
-  }
+  return container;
+}
 
-  function abrirModalNovo() {
-    modoEdicao = false;
-    cpfOriginal = null;
-    modalTitulo.textContent = "Novo Cliente";
-    limparFormulario();
-    document.body.classList.add("modal-aberto");
-    modal.classList.remove("hidden");
-    inputNome.focus();
-  }
+function mostrarToast(mensagem, tipo) {
+  const container = garantirToastContainer();
+  const toast = document.createElement("div");
 
-  function fecharModal() {
-    document.body.classList.remove("modal-aberto");
-    modal.classList.add("hidden");
-    limparFormulario();
-    modoEdicao = false;
-    cpfOriginal = null;
-  }
+  toast.className = "toast toast-" + tipo;
+  toast.textContent = mensagem;
 
-  function limparCPF(cpf) {
-    return String(cpf || "").replace(/\D/g, "").slice(0, 11);
-  }
+  container.appendChild(toast);
 
-  function formatarCPF(cpf) {
-    const numeros = limparCPF(cpf);
-    if (!numeros) return "";
+  setTimeout(function () {
+    toast.classList.add("toast-show");
+  }, 20);
 
-    return numeros
-      .replace(/^(\d{3})(\d)/, "$1.$2")
-      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1-$2");
-  }
+  setTimeout(function () {
+    toast.classList.remove("toast-show");
 
-  function limparTelefone(telefone) {
-    return String(telefone || "").replace(/\D/g, "").slice(0, 11);
-  }
-
-  function formatarTelefone(telefone) {
-    const numeros = limparTelefone(telefone);
-    if (!numeros) return "";
-
-    if (numeros.length <= 10) {
-      return numeros.replace(
-        /^(\d{2})(\d{4})(\d{0,4}).*/,
-        (_, ddd, parte1, parte2) => (parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`)
-      );
-    }
-
-    return numeros.replace(
-      /^(\d{2})(\d{5})(\d{0,4}).*/,
-      (_, ddd, parte1, parte2) => (parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`)
-    );
-  }
-
-  function normalizarTexto(valor) {
-    return String(valor || "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  function ordenarClientesPorNome(clientes) {
-    return [...clientes].sort((a, b) =>
-      String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", {
-        sensitivity: "base"
-      })
-    );
-  }
-
-  function converterValorParaNumero(valorTexto) {
-    if (valorTexto === null || valorTexto === undefined) return null;
-
-    const textoLimpo = String(valorTexto)
-      .replaceAll("R$", "")
-      .replace(/\s/g, "")
-      .replaceAll(".", "")
-      .replace(",", ".")
-      .trim();
-
-    if (!textoLimpo) return 0;
-
-    const numero = Number(textoLimpo);
-    return Number.isNaN(numero) ? null : numero;
-  }
-
-  function formatarMoedaSemSimbolo(valor) {
-    const numero = Number(valor);
-    if (!Number.isFinite(numero)) return "";
-
-    return numero.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  }
-
-  function formatarMoeda(valor) {
-    const numero = Number(valor) || 0;
-    return numero.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    });
-  }
-
-  function converterDataParaInput(data) {
-    if (!data) return "";
-
-    const texto = String(data).trim();
-
-    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-      return texto;
-    }
-
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
-      const [dia, mes, ano] = texto.split("/");
-      return `${ano}-${mes}-${dia}`;
-    }
-
-    return "";
-  }
-
-  function formatarDataParaExibicao(data) {
-    const dataConvertida = converterDataParaInput(data);
-    if (!dataConvertida) return "-";
-
-    const [ano, mes, dia] = dataConvertida.split("-");
-    return `${dia}/${mes}/${ano}`;
-  }
-
-  async function obterClienteSelecionado() {
-    const selecionados = document.querySelectorAll('input[name="clienteSelecionado"]:checked');
-
-    if (selecionados.length === 0) return null;
-
-    if (selecionados.length > 1) {
-      window.uiFeedback.error("Selecione apenas um cliente para editar.");
-      return null;
-    }
-
-    const cpf = selecionados[0].value;
-    const clientes = await obterClientes();
-
-    return clientes.find((cliente) => limparCPF(cliente.cpf) === limparCPF(cpf)) || null;
-  }
-
-  async function abrirModalEdicao() {
-    try {
-      const cliente = await obterClienteSelecionado();
-
-      if (!cliente) {
-        if (document.querySelectorAll('input[name="clienteSelecionado"]:checked').length === 0) {
-          window.uiFeedback.error("Selecione um cliente para editar.");
-        }
-        return;
-      }
-
-      modoEdicao = true;
-      cpfOriginal = limparCPF(cliente.cpf);
-      modalTitulo.textContent = "Editar Cliente";
-
-      inputNome.value = cliente.nome || "";
-      inputCpf.value = limparCPF(cliente.cpf || "");
-      inputTelefone.value = limparTelefone(cliente.telefone || "");
-      inputEndereco.value = cliente.endereco || "";
-      inputEmail.value = cliente.email || "";
-      inputValor.value = formatarMoedaSemSimbolo(cliente.valor);
-      inputVencimento.value = converterDataParaInput(cliente.vencimento);
-      inputStatusPagamento.value = cliente.statusPagamento || "Pendente";
-      inputAtivo.value = cliente.ativo || "Ativo";
-      inputUltimoPagamento.value = converterDataParaInput(cliente.ultimoPagamento);
-
-      document.body.classList.add("modal-aberto");
-      modal.classList.remove("hidden");
-      inputNome.focus();
-    } catch (erro) {
-      console.error("Erro ao abrir modal de edição:", erro);
-      window.uiFeedback.error("Erro ao abrir edição do cliente.");
-    }
-  }
-
-  function validarCampos() {
-    const nome = inputNome.value.trim();
-    const cpf = limparCPF(inputCpf.value);
-    const telefone = limparTelefone(inputTelefone.value);
-    const endereco = inputEndereco.value.trim();
-    const email = inputEmail.value.trim();
-    const valor = converterValorParaNumero(inputValor.value);
-
-    if (!nome || !cpf || !telefone || !endereco || !email) {
-      window.uiFeedback.error("Preencha todos os campos obrigatórios.");
-      return false;
-    }
-
-    if (cpf.length !== 11) {
-      window.uiFeedback.error("CPF inválido. Digite 11 números.");
-      return false;
-    }
-
-    if (telefone.length < 10 || telefone.length > 11) {
-      window.uiFeedback.error("Telefone inválido.");
-      return false;
-    }
-
-    if (valor === null) {
-      window.uiFeedback.error("Informe um valor válido.");
-      return false;
-    }
-
-    return true;
-  }
-
-  async function clienteJaExiste(cpf) {
-    const clientes = await obterClientes();
-    const cpfLimpo = limparCPF(cpf);
-
-    return clientes.some((cliente) => limparCPF(cliente.cpf) === cpfLimpo);
-  }
-
-  async function salvarNovoCliente() {
-    const novoCliente = {
-      nome: inputNome.value.trim(),
-      cpf: limparCPF(inputCpf.value),
-      telefone: limparTelefone(inputTelefone.value),
-      endereco: inputEndereco.value.trim(),
-      email: inputEmail.value.trim(),
-      valor: converterValorParaNumero(inputValor.value),
-      vencimento: inputVencimento.value,
-      statusPagamento: inputStatusPagamento.value,
-      ativo: inputAtivo.value,
-      ultimoPagamento: inputUltimoPagamento.value,
-      diasAtrasoManual: ""
-    };
-
-    if (await clienteJaExiste(novoCliente.cpf)) {
-      window.uiFeedback.error("Já existe um cliente com esse CPF.");
-      return;
-    }
-
-    await adicionarClientes([novoCliente]);
-    await renderizarClientes();
-    fecharModal();
-    window.uiFeedback.success("Cliente cadastrado com sucesso.");
-  }
-
-  async function salvarEdicaoCliente() {
-    if (!cpfOriginal) return;
-
-    const novoCpf = limparCPF(inputCpf.value);
-
-    if (novoCpf !== cpfOriginal && await clienteJaExiste(novoCpf)) {
-      window.uiFeedback.error("Já existe outro cliente com esse CPF.");
-      return;
-    }
-
-    const clientes = await obterClientes();
-    const clienteAtual = clientes.find((cliente) => limparCPF(cliente.cpf) === cpfOriginal);
-
-    if (!clienteAtual) {
-      window.uiFeedback.error("Cliente não encontrado.");
-      return;
-    }
-
-    const clienteAtualizado = {
-      ...clienteAtual,
-      nome: inputNome.value.trim(),
-      cpf: novoCpf,
-      telefone: limparTelefone(inputTelefone.value),
-      endereco: inputEndereco.value.trim(),
-      email: inputEmail.value.trim(),
-      valor: converterValorParaNumero(inputValor.value),
-      vencimento: inputVencimento.value,
-      statusPagamento: inputStatusPagamento.value,
-      ativo: inputAtivo.value,
-      ultimoPagamento: inputUltimoPagamento.value
-    };
-
-    await excluirCliente(cpfOriginal);
-    await adicionarClientes([clienteAtualizado]);
-    await renderizarClientes();
-    fecharModal();
-    window.uiFeedback.success("Cliente atualizado com sucesso.");
-  }
-
-  async function excluirClienteSelecionado() {
-    try {
-      const selecionados = document.querySelectorAll('input[name="clienteSelecionado"]:checked');
-
-      if (selecionados.length === 0) {
-        window.uiFeedback.error("Selecione pelo menos um cliente para excluir.");
-        return;
-      }
-
-      const confirmar = await window.uiFeedback.confirm(
-        `Tem certeza que deseja excluir ${selecionados.length} cliente(s)?`
-      );
-      if (!confirmar) return;
-
-      for (const item of selecionados) {
-        const cpf = limparCPF(item.value);
-        await excluirCliente(cpf);
-      }
-
-      await renderizarClientes();
-      window.uiFeedback.success("Cliente(s) excluído(s) com sucesso.");
-    } catch (erro) {
-      console.error("Erro ao excluir cliente(s):", erro);
-      window.uiFeedback.error("Erro ao excluir cliente(s).");
-    }
-  }
-
-  async function renderizarClientes(lista = null) {
-    const tabelaBody = document.getElementById("tabela-body");
-    if (!tabelaBody) return;
-
-    const clientes = lista || await obterClientes();
-    const clientesOrdenados = ordenarClientesPorNome(clientes);
-
-    tabelaBody.innerHTML = "";
-
-    if (!clientesOrdenados.length) {
-      tabelaBody.innerHTML = `
-        <tr>
-          <td colspan="11">Nenhum cliente cadastrado.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    clientesOrdenados.forEach((cliente) => {
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td><input type="checkbox" name="clienteSelecionado" value="${limparCPF(cliente.cpf)}"></td>
-        <td>${cliente.nome || ""}</td>
-        <td>${formatarCPF(cliente.cpf || "")}</td>
-        <td>${formatarTelefone(cliente.telefone || "")}</td>
-        <td>${cliente.endereco || ""}</td>
-        <td>${cliente.email || ""}</td>
-        <td>${formatarMoeda(cliente.valor)}</td>
-        <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-        <td>${cliente.statusPagamento || "Pendente"}</td>
-        <td>${cliente.ativo || "Ativo"}</td>
-        <td>${formatarDataParaExibicao(cliente.ultimoPagamento)}</td>
-      `;
-
-      tabelaBody.appendChild(tr);
-    });
-  }
-
-  async function aplicarPesquisaClientes() {
-    if (modalAberto()) return;
-
-    const valorPesquisa = pesquisa.value.trim();
-    const termoTexto = normalizarTexto(valorPesquisa);
-    const termoCpf = limparCPF(valorPesquisa);
-    const clientes = await obterClientes();
-
-    if (!valorPesquisa) {
-      await renderizarClientes();
-      return;
-    }
-
-    const filtrados = clientes.filter((cliente) => {
-      const nome = normalizarTexto(cliente.nome || "");
-      const cpf = limparCPF(cliente.cpf || "");
-      const email = normalizarTexto(cliente.email || "");
-      const telefone = normalizarTexto(cliente.telefone || "");
-      const endereco = normalizarTexto(cliente.endereco || "");
-
-      return (
-        nome.includes(termoTexto) ||
-        email.includes(termoTexto) ||
-        telefone.includes(termoTexto) ||
-        endereco.includes(termoTexto) ||
-        (termoCpf && cpf.includes(termoCpf))
-      );
-    });
-
-    await renderizarClientes(filtrados);
-  }
-
-  btnNovo.addEventListener("click", abrirModalNovo);
-  btnEditar.addEventListener("click", abrirModalEdicao);
-  btnExcluir.addEventListener("click", excluirClienteSelecionado);
-  btnCancelar.addEventListener("click", fecharModal);
-
-  btnConfirmar.addEventListener("click", async () => {
-    try {
-      if (!validarCampos()) return;
-
-      btnConfirmar.disabled = true;
-
-      if (modoEdicao) {
-        await salvarEdicaoCliente();
-      } else {
-        await salvarNovoCliente();
-      }
-    } catch (erro) {
-      console.error("Erro ao confirmar cliente:", erro);
-      window.uiFeedback.error("Erro ao salvar cliente.");
-    } finally {
-      btnConfirmar.disabled = false;
-    }
-  });
-
-  inputCpf.addEventListener("blur", () => {
-    inputCpf.value = formatarCPF(inputCpf.value);
-  });
-
-  inputTelefone.addEventListener("blur", () => {
-    inputTelefone.value = formatarTelefone(inputTelefone.value);
-  });
-
-  inputValor.addEventListener("blur", () => {
-    const valor = converterValorParaNumero(inputValor.value);
-    inputValor.value = valor === null ? "" : formatarMoedaSemSimbolo(valor);
-  });
-
-  pesquisa.addEventListener("input", () => {
-    if (modalAberto()) return;
-
-    clearTimeout(timeoutPesquisa);
-    timeoutPesquisa = setTimeout(() => {
-      aplicarPesquisaClientes();
+    setTimeout(function () {
+      toast.remove();
     }, 250);
-  });
+  }, 2600);
+}
 
-  pesquisa.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      aplicarPesquisaClientes();
+function mostrarErro(mensagem) {
+  mostrarToast(mensagem, "error");
+}
+
+function mostrarSucesso(mensagem) {
+  mostrarToast(mensagem, "success");
+}
+
+function confirmarComDesign(mensagem) {
+  return new Promise(function (resolve) {
+    let overlay = document.getElementById("confirm-overlay");
+
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "confirm-overlay";
+      overlay.innerHTML = `
+        <div class="confirm-box">
+          <h3>Confirmação</h3>
+          <p id="confirm-message"></p>
+          <div class="confirm-actions">
+            <button id="confirm-no" type="button">Cancelar</button>
+            <button id="confirm-yes" type="button">Confirmar</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
     }
+
+    const mensagemElemento = overlay.querySelector("#confirm-message");
+    const btnCancelar = overlay.querySelector("#confirm-no");
+    const btnConfirmar = overlay.querySelector("#confirm-yes");
+
+    mensagemElemento.textContent = mensagem;
+    overlay.classList.add("confirm-open");
+    document.body.classList.add("modal-aberto");
+
+    function fechar(resultado) {
+      overlay.classList.remove("confirm-open");
+      document.body.classList.remove("modal-aberto");
+
+      btnCancelar.removeEventListener("click", cancelar);
+      btnConfirmar.removeEventListener("click", confirmar);
+      overlay.removeEventListener("click", clicarFora);
+
+      resolve(resultado);
+    }
+
+    function cancelar() {
+      fechar(false);
+    }
+
+    function confirmar() {
+      fechar(true);
+    }
+
+    function clicarFora(evento) {
+      if (evento.target === overlay) {
+        fechar(false);
+      }
+    }
+
+    btnCancelar.addEventListener("click", cancelar);
+    btnConfirmar.addEventListener("click", confirmar);
+    overlay.addEventListener("click", clicarFora);
+  });
+}
+
+function limparCPF(cpf) {
+  return String(cpf || "").replace(/[^0-9]/g, "").slice(0, 11);
+}
+
+function limparTelefone(telefone) {
+  return String(telefone || "").replace(/[^0-9]/g, "").slice(0, 11);
+}
+
+function formatarCPF(cpf) {
+  const numeros = limparCPF(cpf);
+
+  if (numeros.length !== 11) {
+    return numeros;
+  }
+
+  return (
+    numeros.slice(0, 3) +
+    "." +
+    numeros.slice(3, 6) +
+    "." +
+    numeros.slice(6, 9) +
+    "-" +
+    numeros.slice(9, 11)
+  );
+}
+
+function formatarTelefone(telefone) {
+  const numeros = limparTelefone(telefone);
+
+  if (numeros.length === 10) {
+    return "(" + numeros.slice(0, 2) + ") " + numeros.slice(2, 6) + "-" + numeros.slice(6, 10);
+  }
+
+  if (numeros.length === 11) {
+    return "(" + numeros.slice(0, 2) + ") " + numeros.slice(2, 7) + "-" + numeros.slice(7, 11);
+  }
+
+  return numeros;
+}
+
+function normalizarTexto(valor) {
+  return String(valor || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function converterValorParaNumero(valor) {
+  const texto = String(valor || "")
+    .replace("R$", "")
+    .replace(/\./g, "")
+    .replace(",", ".")
+    .trim();
+
+  if (!texto) {
+    return 0;
+  }
+
+  const numero = Number(texto);
+  return Number.isNaN(numero) ? null : numero;
+}
+
+function obterSelecionados() {
+  return Array.from(
+    document.querySelectorAll('input[name="clienteSelecionado"]:checked')
+  ).map(function (checkbox) {
+    return limparCPF(checkbox.value);
+  });
+}
+
+function limparFormulario() {
+  document.getElementById("input-nome").value = "";
+  document.getElementById("input-cpf").value = "";
+  document.getElementById("input-telefone").value = "";
+  document.getElementById("input-endereco").value = "";
+  document.getElementById("input-email").value = "";
+  document.getElementById("input-valor").value = "";
+  document.getElementById("input-vencimento").value = "";
+  document.getElementById("input-status-pagamento").value = "Pendente";
+  document.getElementById("input-ativo").value = "Ativo";
+  document.getElementById("input-ultimo-pagamento").value = "";
+}
+
+function abrirModalNovo() {
+  modoEdicao = false;
+  cpfOriginal = "";
+
+  document.getElementById("modal-titulo").textContent = "Novo Cliente";
+  limparFormulario();
+
+  document.body.classList.add("modal-aberto");
+  document.getElementById("modal-cliente").classList.remove("hidden");
+  document.getElementById("input-nome").focus();
+}
+
+function abrirModalEdicao() {
+  const selecionados = obterSelecionados();
+
+  if (selecionados.length === 0) {
+    mostrarErro("Selecione um cliente para editar.");
+    return;
+  }
+
+  if (selecionados.length > 1) {
+    mostrarErro("Selecione apenas um cliente para editar.");
+    return;
+  }
+
+  const cliente = clientesCache.find(function (item) {
+    return limparCPF(item.cpf) === selecionados[0];
   });
 
-  await renderizarClientes();
+  if (!cliente) {
+    mostrarErro("Cliente não encontrado.");
+    return;
+  }
+
+  modoEdicao = true;
+  cpfOriginal = limparCPF(cliente.cpf);
+
+  document.getElementById("modal-titulo").textContent = "Editar Cliente";
+  document.getElementById("input-nome").value = cliente.nome || "";
+  document.getElementById("input-cpf").value = formatarCPF(cliente.cpf || "");
+  document.getElementById("input-telefone").value = formatarTelefone(cliente.telefone || "");
+  document.getElementById("input-endereco").value = cliente.endereco || "";
+  document.getElementById("input-email").value = cliente.email || "";
+  document.getElementById("input-valor").value = cliente.valor || "";
+  document.getElementById("input-vencimento").value = cliente.vencimento || "";
+  document.getElementById("input-status-pagamento").value = cliente.statusPagamento || "Pendente";
+  document.getElementById("input-ativo").value = cliente.ativo || "Ativo";
+  document.getElementById("input-ultimo-pagamento").value = cliente.ultimoPagamento || "";
+
+  document.body.classList.add("modal-aberto");
+  document.getElementById("modal-cliente").classList.remove("hidden");
+  document.getElementById("input-nome").focus();
+}
+
+function fecharModal() {
+  document.body.classList.remove("modal-aberto");
+  document.getElementById("modal-cliente").classList.add("hidden");
+
+  limparFormulario();
+  modoEdicao = false;
+  cpfOriginal = "";
+}
+
+function validarFormulario() {
+  const nome = document.getElementById("input-nome").value.trim();
+  const cpf = limparCPF(document.getElementById("input-cpf").value);
+  const telefone = limparTelefone(document.getElementById("input-telefone").value);
+  const endereco = document.getElementById("input-endereco").value.trim();
+  const email = document.getElementById("input-email").value.trim();
+  const valor = converterValorParaNumero(document.getElementById("input-valor").value);
+
+  if (!nome || !cpf || !telefone || !endereco || !email) {
+    mostrarErro("Preencha todos os campos obrigatórios.");
+    return false;
+  }
+
+  if (cpf.length !== 11) {
+    mostrarErro("CPF inválido. Digite 11 números.");
+    return false;
+  }
+
+  if (telefone.length < 10 || telefone.length > 11) {
+    mostrarErro("Telefone inválido.");
+    return false;
+  }
+
+  if (valor === null) {
+    mostrarErro("Informe um valor válido.");
+    return false;
+  }
+
+  return true;
+}
+
+function montarClienteDoFormulario() {
+  return {
+    nome: document.getElementById("input-nome").value.trim(),
+    cpf: limparCPF(document.getElementById("input-cpf").value),
+    telefone: limparTelefone(document.getElementById("input-telefone").value),
+    endereco: document.getElementById("input-endereco").value.trim(),
+    email: document.getElementById("input-email").value.trim(),
+    valor: converterValorParaNumero(document.getElementById("input-valor").value),
+    vencimento: document.getElementById("input-vencimento").value,
+    statusPagamento: document.getElementById("input-status-pagamento").value,
+    ativo: document.getElementById("input-ativo").value,
+    ultimoPagamento: document.getElementById("input-ultimo-pagamento").value,
+    diasAtrasoManual: ""
+  };
+}
+
+async function salvarCliente() {
+  if (!validarFormulario()) {
+    return;
+  }
+
+  const cliente = montarClienteDoFormulario();
+  const cpfNovo = limparCPF(cliente.cpf);
+
+  const existeCpf = clientesCache.some(function (item) {
+    const cpfAtual = limparCPF(item.cpf);
+
+    if (modoEdicao) {
+      return cpfAtual === cpfNovo && cpfAtual !== cpfOriginal;
+    }
+
+    return cpfAtual === cpfNovo;
+  });
+
+  if (existeCpf) {
+    mostrarErro("Já existe um cliente com esse CPF.");
+    return;
+  }
+
+  if (modoEdicao) {
+    clientesCache = clientesCache.map(function (item) {
+      return limparCPF(item.cpf) === cpfOriginal ? cliente : item;
+    });
+
+    await salvarClientes(clientesCache);
+    mostrarSucesso("Cliente editado com sucesso.");
+  } else {
+    clientesCache.push(cliente);
+    await salvarClientes(clientesCache);
+    mostrarSucesso("Cliente cadastrado com sucesso.");
+  }
+
+  fecharModal();
+  await carregarClientes();
+}
+
+async function excluirClientesSelecionados() {
+  const selecionados = obterSelecionados();
+
+  if (selecionados.length === 0) {
+    mostrarErro("Selecione pelo menos um cliente para excluir.");
+    return;
+  }
+
+  const confirmado = await confirmarComDesign(
+    "Deseja excluir " + selecionados.length + " cliente(s)?"
+  );
+
+  if (!confirmado) {
+    return;
+  }
+
+  clientesCache = clientesCache.filter(function (cliente) {
+    return !selecionados.includes(limparCPF(cliente.cpf));
+  });
+
+  await salvarClientes(clientesCache);
+  mostrarSucesso("Cliente(s) excluído(s) com sucesso.");
+  await carregarClientes();
+}
+
+function clienteCombinaComPesquisa(cliente, termo) {
+  const termoTexto = normalizarTexto(termo);
+  const termoCpf = limparCPF(termo);
+
+  const nome = normalizarTexto(cliente.nome);
+  const cpf = limparCPF(cliente.cpf);
+  const telefone = normalizarTexto(cliente.telefone);
+  const endereco = normalizarTexto(cliente.endereco);
+  const email = normalizarTexto(cliente.email);
+
+  return (
+    nome.includes(termoTexto) ||
+    email.includes(termoTexto) ||
+    telefone.includes(termoTexto) ||
+    endereco.includes(termoTexto) ||
+    (termoCpf.length > 0 && cpf.includes(termoCpf))
+  );
+}
+
+function escaparHtml(valor) {
+  return String(valor || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function renderizarTabela(clientes) {
+  const corpoTabela = document.getElementById("tabela-body");
+  corpoTabela.innerHTML = "";
+
+  if (clientes.length === 0) {
+    corpoTabela.innerHTML = `
+      <tr>
+        <td colspan="6" class="mensagem-vazia">Nenhum cliente cadastrado.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  clientes.forEach(function (cliente) {
+    const linha = document.createElement("tr");
+    const cpfLimpo = limparCPF(cliente.cpf);
+
+    linha.innerHTML = `
+      <td>
+        <input
+          class="checkbox-cliente"
+          type="checkbox"
+          name="clienteSelecionado"
+          value="${cpfLimpo}"
+        >
+      </td>
+      <td>${escaparHtml(cliente.nome)}</td>
+      <td>${formatarCPF(cliente.cpf)}</td>
+      <td>${formatarTelefone(cliente.telefone)}</td>
+      <td>${escaparHtml(cliente.endereco)}</td>
+      <td>${escaparHtml(cliente.email)}</td>
+    `;
+
+    corpoTabela.appendChild(linha);
+  });
+}
+
+function aplicarPesquisa() {
+  const termo = document.getElementById("pesquisa").value.trim();
+
+  if (!termo) {
+    renderizarTabela(clientesCache);
+    return;
+  }
+
+  const filtrados = clientesCache.filter(function (cliente) {
+    return clienteCombinaComPesquisa(cliente, termo);
+  });
+
+  renderizarTabela(filtrados);
+}
+
+async function carregarClientes() {
+  const clientes = await obterClientes();
+
+  clientesCache = Array.isArray(clientes)
+    ? clientes.slice().sort(function (a, b) {
+        return String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR");
+      })
+    : [];
+
+  aplicarPesquisa();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("btn-novo").addEventListener("click", abrirModalNovo);
+  document.getElementById("btn-editar").addEventListener("click", abrirModalEdicao);
+  document.getElementById("btn-excluir").addEventListener("click", excluirClientesSelecionados);
+  document.getElementById("btn-cancelar").addEventListener("click", fecharModal);
+  document.getElementById("btn-confirmar").addEventListener("click", salvarCliente);
+  document.getElementById("pesquisa").addEventListener("input", aplicarPesquisa);
+
+  document.getElementById("input-cpf").addEventListener("input", function (evento) {
+    evento.target.value = formatarCPF(evento.target.value);
+  });
+
+  document.getElementById("input-telefone").addEventListener("input", function (evento) {
+    evento.target.value = formatarTelefone(evento.target.value);
+  });
+
+  carregarClientes();
 });

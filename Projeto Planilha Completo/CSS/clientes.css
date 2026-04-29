@@ -1,354 +1,371 @@
 .barra-acoes {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-    margin-bottom: 20px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-    justify-content: center;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 20px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-/* ========================= */
-/* BOTÕES */
-/* ========================= */
-
 .btn {
-    background-color: #34495e;
-    color: rgb(215, 248, 250);
-    border: none;
-    padding: 10px 16px;
-    border-radius: 12px;
-    cursor: pointer;
-    border: 2px solid #34495e;
-    font-size: 15px;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  background-color: #34495e;
+  color: rgb(215, 248, 250);
+  border: 2px solid #34495e;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: 0.3s;
 }
 
 .btn:hover {
-    background-color: rgb(215, 248, 250);
-    color: #34495e;
-    border: 2px solid #34495e;
-    transform: translateY(-1px);
+  background-color: rgb(215, 248, 250);
+  color: #34495e;
 }
 
 .btn i {
-    color: #81cafc;
+  color: #81cafc;
 }
 
-/* ========================= */
-/* PESQUISA */
-/* ========================= */
-
 .pesquisa {
-    background-color: #34495e;
-    color: rgb(215, 248, 250);
-    padding: 10px 40px 10px 10px;
-    border-radius: 12px;
-    border: none;
-    width: 320px;
-    border: 2px solid #34495e;
-    transition: 0.2s;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 1;
+  background-color: #34495e;
+  color: rgb(215, 248, 250);
+  padding: 8px;
+  border-radius: 6px;
+  border: 2px solid #34495e;
+  width: 230px;
+  transition: 0.3s;
+}
+
+.pesquisa::placeholder {
+  color: rgba(215, 248, 250, 0.7);
 }
 
 .pesquisa:hover,
 .pesquisa:focus {
-    background-color: #ffffff;
-    color: #34495e;
-    border: 2px solid #34495e;
-    outline: none;
+  background-color: rgb(215, 248, 250);
+  color: #34495e;
+  outline: none;
 }
 
 .campo-pesquisa {
-    position: relative;
-    display: inline-block;
-    z-index: 1;
+  position: relative;
+  display: inline-block;
 }
 
 .campo-pesquisa i {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #81cafc;
-    pointer-events: none;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #81cafc;
+}
+
+.coluna-selecao {
+  min-width: 45px !important;
+  width: 45px;
+  text-align: center;
 }
 
 /* ========================= */
-/* CHECKBOX CIRCULAR */
+/* CHECKBOX CIRCULAR MÉDIO   */
 /* ========================= */
 
-#tabela-body td:first-child {
-    text-align: center;
-    vertical-align: middle;
+.checkbox-cliente {
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 17px;     /* tamanho médio */
+  height: 17px;    /* tamanho médio */
+
+  border: 2px solid #34495e;
+
+  border-radius: 50%;
+
+  background-color: rgb(215, 248, 250);
+
+  cursor: pointer;
+
+  position: relative;
+
+  display: inline-block;
+
+  vertical-align: middle;
+
+  transition: 0.2s;
+
 }
 
-#tabela-body input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid #34495e;
-    background-color: rgb(215, 248, 250);
-    cursor: pointer;
-    position: relative;
-    transition: 0.2s ease;
+/* Hover suave */
+
+.checkbox-cliente:hover {
+
+  transform: scale(1.08);
+
 }
 
-#tabela-body input[type="checkbox"]:hover {
-    border-color: #81cafc;
-    background-color: #e6f7ff;
+/* Quando marcado */
+
+.checkbox-cliente:checked {
+
+  background-color: #34495e;
+
 }
 
-#tabela-body input[type="checkbox"]:checked {
-    background-color: #81cafc;
-    border-color: #34495e;
-}
+/* Bolinha interna proporcional */
 
-#tabela-body input[type="checkbox"]:checked::after {
-    content: "";
-    width: 8px;
-    height: 8px;
-    background-color: #34495e;
-    border-radius: 50%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
+.checkbox-cliente:checked::after {
 
-#tabela-body tr {
-    cursor: pointer;
-    transition: 0.2s;
-}
+  content: "";
 
-#tabela-body tr:hover td {
-    background-color: #d8f1ff;
-}
+  width: 7px;   /* proporcional ao 17px */
+  height: 7px;
 
-#tabela-body tr.linha-selecionada td {
-    background-color: #81cafc;
-    color: #34495e;
-    font-weight: bold;
+  background-color: rgb(215, 248, 250);
+
+  border-radius: 50%;
+
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
 }
 
 /* ========================= */
-/* MODAL */
+/* MODAL                     */
 /* ========================= */
 
-body.modal-aberto {
-    overflow: hidden;
+.hidden {
+  display: none !important;
 }
 
 .modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
-    box-sizing: border-box;
-    pointer-events: auto;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
 
-.hidden {
-    display: none;
+.modal-caixa {
+  background: #81cafc;
+  color: #34495e;
+  width: 520px;
+  max-width: 92%;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 3px solid #34495e;
 }
 
-.modal-conteudo {
-    background: #ffffff;
-    width: 560px;
-    max-width: 92%;
-    max-height: 88vh;
-    overflow-y: auto;
-    padding: 28px;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
-    position: relative;
-    z-index: 10000;
-    pointer-events: auto;
+.modal-caixa h3 {
+  margin-top: 0;
+  font-family: "Montserrat", sans-serif;
+  text-align: center;
 }
 
-.modal-conteudo h2 {
-    text-align: center;
-    margin-bottom: 24px;
-    color: #34495e;
-    font-family: 'Montserrat', sans-serif;
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.modal-conteudo label {
-    display: block;
-    margin-bottom: 8px;
-    margin-top: 12px;
-    color: #34495e;
-    font-weight: bold;
+.campo-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-size: 14px;
+  font-weight: bold;
 }
 
-.modal-conteudo input,
-.modal-conteudo select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #c9d3dd;
-    border-radius: 10px;
-    font-size: 15px;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 10001;
-    background: #ffffff;
-    color: #34495e;
+.campo-form input,
+.campo-form select {
+  margin-top: 5px;
+  padding: 9px;
+  border-radius: 6px;
+  border: 2px solid #34495e;
+  outline: none;
+  font-size: 14px;
 }
 
-.modal-conteudo input:focus,
-.modal-conteudo select:focus {
-    outline: none;
-    border-color: #81cafc;
-    box-shadow: 0 0 0 3px rgba(129, 202, 252, 0.18);
+.campo-form.full {
+  grid-column: 1 / 3;
 }
 
-.botoes-modal {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-    position: sticky;
-    bottom: 0;
-    background: #ffffff;
-    padding-top: 10px;
+.modal-acoes {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 
-.botoes-modal button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 12px;
-    background: #34495e;
-    color: white;
-    cursor: pointer;
-    font-size: 16px;
-    transition: all 0.2s ease;
+.modal-aberto {
+  overflow: hidden;
 }
 
-.botoes-modal button:hover {
-    background: #81cafc;
-    color: #34495e;
+.mensagem-vazia {
+  text-align: center;
 }
 
 /* ========================= */
-/* TOAST */
-/* ========================= */
-
-#toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 20000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-}
-
-.toast {
-    min-width: 260px;
-    max-width: 360px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 14px;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.18);
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: all 0.22s ease;
-    pointer-events: none;
-}
-
-.toast-show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.toast-info {
-    background: #34495e;
-}
-
-.toast-success {
-    background: #1f8b4c;
-}
-
-.toast-error {
-    background: #c0392b;
-}
-
-/* ========================= */
-/* CONFIRMAÇÃO */
+/* CONFIRMAÇÃO               */
 /* ========================= */
 
 #confirm-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 30000;
-    pointer-events: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
 }
 
 #confirm-overlay.confirm-open {
-    display: flex;
-    pointer-events: auto;
+  display: flex;
 }
 
 .confirm-box {
-    background: #fff;
-    width: 420px;
-    max-width: 92%;
-    border-radius: 14px;
-    padding: 24px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
+  background: #81cafc;
+  color: #34495e;
+  width: 380px;
+  max-width: 90%;
+  padding: 26px;
+  border-radius: 14px;
+  border: 3px solid #34495e;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .confirm-box h3 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    color: #34495e;
-    font-family: 'Montserrat', sans-serif;
-}
-
-.confirm-box p {
-    margin: 0 0 18px 0;
-    color: #34495e;
-    font-size: 15px;
-    line-height: 1.5;
+  margin-top: 0;
+  font-family: "Montserrat", sans-serif;
 }
 
 .confirm-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
 }
 
 .confirm-actions button {
-    min-width: 110px;
-    padding: 10px 14px;
-    border: none;
-    border-radius: 10px;
-    background: #34495e;
-    color: #fff;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
+  background-color: #34495e;
+  color: rgb(215, 248, 250);
+  border: 2px solid #34495e;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
 }
 
 .confirm-actions button:hover {
-    background: #81cafc;
-    color: #34495e;
+  background-color: rgb(215, 248, 250);
+  color: #34495e;
+}
+
+/* ========================= */
+/* MENSAGENS BONITAS / TOAST */
+/* ========================= */
+
+#toast-container {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  z-index: 20000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  min-width: 260px;
+  background: #34495e;
+  color: rgb(215, 248, 250);
+  padding: 13px 20px;
+  border-radius: 10px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+  font-size: 15px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: 0.25s ease;
+  pointer-events: none;
+}
+
+.toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-success {
+  background: #2d6a4f;
+}
+
+.toast-error {
+  background: #7a2f2f;
+}
+
+/* ========================= */
+/* CONFIRMAÇÃO BONITA        */
+/* ========================= */
+
+#confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 19000;
+}
+
+#confirm-overlay.confirm-open {
+  display: flex;
+}
+
+.confirm-box {
+  background: #81cafc;
+  color: #34495e;
+  width: 380px;
+  max-width: 90%;
+  padding: 26px;
+  border-radius: 14px;
+  border: 3px solid #34495e;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.confirm-box h3 {
+  margin-top: 0;
+  font-family: "Montserrat", sans-serif;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.confirm-actions button {
+  background-color: #34495e;
+  color: rgb(215, 248, 250);
+  border: 2px solid #34495e;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.confirm-actions button:hover {
+  background-color: rgb(215, 248, 250);
+  color: #34495e;
 }

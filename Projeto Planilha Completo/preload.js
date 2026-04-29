@@ -5,5 +5,6 @@ contextBridge.exposeInMainWorld("api", {
   salvarClientes: (clientes) => ipcRenderer.invoke("clientes:salvar", clientes),
   recarregarClientes: () => ipcRenderer.invoke("clientes:recarregar"),
   storageGet: (chave) => ipcRenderer.invoke("storage:get", chave),
-  storageSet: (chave, valor) => ipcRenderer.invoke("storage:set", chave, valor)
+  storageSet: (chave, valor) => ipcRenderer.invoke("storage:set", chave, valor),
+  validarLicenca: (chave) => ipcRenderer.invoke("licenca:validar", chave)
 });

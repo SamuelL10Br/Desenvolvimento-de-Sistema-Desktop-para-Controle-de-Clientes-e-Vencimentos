@@ -12,35 +12,32 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
   <div class="opcoes">
     <h2>OPÇÕES</h2>
 
     <a class="nao-ativo" href="dashboard.html">
-      <i class="fa-solid fa-chart-column"></i>
-      Dashboard
+      <i class="fa-solid fa-chart-column"></i> Dashboard
     </a>
 
     <a class="nao-ativo" href="clientes.html">
-      <i class="fa-solid fa-users"></i>
-      Dados dos Clientes
+      <i class="fa-solid fa-users"></i> Dados dos Clientes
     </a>
 
     <a class="menu-ativo" href="pagamentos.html">
-      <i class="fa-solid fa-credit-card"></i>
-      Pagamentos
+      <i class="fa-solid fa-credit-card"></i> Pagamentos
     </a>
 
     <a class="nao-ativo" href="importacao.html">
-      <i class="fa-solid fa-file-export"></i>
-      Exportação
+      <i class="fa-solid fa-folder-open"></i> Exportar
     </a>
 
     <a class="nao-ativo" href="sobre.html">
-      <i class="fa-solid fa-circle-info"></i>
-      Sobre
+      <i class="fa-solid fa-circle-info"></i> Sobre
     </a>
   </div>
 
@@ -49,22 +46,16 @@
 
     <div class="barra-acoes">
       <div class="campo-pesquisa">
-        <input
-          type="text"
-          class="pesquisa"
-          id="pesquisa"
-          placeholder="Pesquisar cliente - nome/CPF"
-          autocomplete="off"
-        >
+        <input id="campoFiltro" type="text" class="pesquisa" placeholder="Pesquisar Cliente - nome/CPF">
         <i class="fa-solid fa-magnifying-glass"></i>
       </div>
 
-      <button class="btn" id="btn-editar" type="button">
+      <button id="btnEditarPagamento" class="btn" type="button">
         <i class="fa-solid fa-pen"></i> Editar
       </button>
     </div>
 
-    <table class="tabela-clientes">
+    <table id="tabela-pagamentos" class="tabela-clientes">
       <thead>
         <tr>
           <th>Selecionar</th>
@@ -73,50 +64,60 @@
           <th>Valor</th>
           <th>Vencimento</th>
           <th>Status</th>
-          <th>Ativo/Não Ativo</th>
-          <th>Último Pagamento</th>
-          <th>Dias / Situação</th>
+          <th>Dias para vencer</th>
         </tr>
       </thead>
 
-      <tbody id="tabela-body"></tbody>
+      <tbody id="tabela-body">
+        <tr>
+          <td colspan="7" class="mensagem-vazia">Nenhum pagamento cadastrado.</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
   <div id="modal-pagamento" class="modal hidden">
-    <div class="modal-conteudo">
-      <h2>Editar Pagamento</h2>
+    <div class="modal-caixa">
+      <h3>Editar Pagamento</h3>
 
-      <label for="input-nome">Nome:</label>
-      <input type="text" id="input-nome" autocomplete="off">
+      <div class="form-grid">
+        <div class="campo-form full">
+          <label>Cliente</label>
+          <input id="pagamento-nome" type="text" disabled>
+        </div>
 
-      <label for="input-cpf">CPF:</label>
-      <input type="text" id="input-cpf" maxlength="14" placeholder="000.000.000-00" autocomplete="off">
+        <div class="campo-form">
+          <label>Valor</label>
+          <input id="pagamento-valor" type="text" placeholder="Ex: 100,00">
+        </div>
 
-      <label for="input-valor">Valor:</label>
-      <input type="text" id="input-valor" inputmode="decimal" placeholder="0,00" autocomplete="off">
+        <div class="campo-form">
+          <label>Vencimento</label>
+          <input id="pagamento-vencimento" type="date">
+        </div>
 
-      <label for="input-vencimento">Vencimento:</label>
-      <input type="date" id="input-vencimento">
+        <div class="campo-form">
+          <label>Status</label>
+          <select id="pagamento-status">
+            <option value="Automatico">Automático</option>
+            <option value="Pago">Pago</option>
+          </select>
+        </div>
 
-      <label for="input-status">Status:</label>
-      <input type="text" id="input-status" readonly>
+        <div class="campo-form">
+          <label>Último Pagamento</label>
+          <input id="pagamento-ultimo" type="date">
+        </div>
+      </div>
 
-      <label for="input-ativo">Ativo/Não Ativo:</label>
-      <select id="input-ativo">
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select>
+      <div class="modal-acoes">
+        <button id="btnSalvarPagamento" class="btn" type="button">
+          <i class="fa-solid fa-check"></i> Salvar
+        </button>
 
-      <label for="input-ultimo-pagamento">Último Pagamento:</label>
-      <input type="date" id="input-ultimo-pagamento">
-
-      <label for="input-atraso">Dias / Situação:</label>
-      <input type="text" id="input-atraso" readonly>
-
-      <div class="botoes-modal">
-        <button id="btn-confirmar" type="button">Confirmar</button>
-        <button id="btn-cancelar" type="button">Cancelar</button>
+        <button id="btnCancelarPagamento" class="btn" type="button">
+          <i class="fa-solid fa-xmark"></i> Cancelar
+        </button>
       </div>
     </div>
   </div>

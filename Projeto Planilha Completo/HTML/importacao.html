@@ -3,107 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Exportação</title>
+  <title>Exportar Dados</title>
 
-  <link rel="stylesheet" href="../CSS/importacao.css">
   <link rel="stylesheet" href="../CSS/dashboard.css">
   <link rel="stylesheet" href="../CSS/clientes.css">
+  <link rel="stylesheet" href="../CSS/importacao.css">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
   <div class="opcoes">
     <h2>OPÇÕES</h2>
 
     <a class="nao-ativo" href="dashboard.html">
-      <i class="fa-solid fa-chart-column"></i>
-      Dashboard
+      <i class="fa-solid fa-chart-column"></i> Dashboard
     </a>
 
     <a class="nao-ativo" href="clientes.html">
-      <i class="fa-solid fa-users"></i>
-      Dados dos Clientes
+      <i class="fa-solid fa-users"></i> Dados dos Clientes
     </a>
 
     <a class="nao-ativo" href="pagamentos.html">
-      <i class="fa-solid fa-credit-card"></i>
-      Pagamentos
+      <i class="fa-solid fa-credit-card"></i> Pagamentos
     </a>
 
     <a class="menu-ativo" href="importacao.html">
-      <i class="fa-solid fa-file-export"></i>
-      Exportação
+      <i class="fa-solid fa-folder-open"></i> Exportar
     </a>
 
     <a class="nao-ativo" href="sobre.html">
-      <i class="fa-solid fa-circle-info"></i>
-      Sobre
+      <i class="fa-solid fa-circle-info"></i> Sobre
     </a>
   </div>
 
   <div class="conteudo">
-    <h2 class="titulo">EXPORTAÇÃO DE DADOS DOS CLIENTES</h2>
+    <h2 class="titulo">EXPORTAR DADOS</h2>
 
-    <div class="barra-acoes barra-principal">
-      <div class="campo-pesquisa campo-pesquisa-exportacao">
-        <input
-          type="text"
-          class="pesquisa"
-          id="campoFiltro"
-          placeholder="Pesquisar cliente - nome/CPF"
-          autocomplete="off"
-        >
+    <div class="barra-acoes">
+      <div class="exportar-container">
+        <button class="btn" type="button">
+          <i class="fa-solid fa-file-export"></i> Exportar
+        </button>
+
+        <div class="exportar-box">
+          <button id="btnExportarExcel" class="btn" type="button">
+            <i class="fa-solid fa-file-excel"></i> Excel
+          </button>
+
+          <button id="btnExportarJson" class="btn" type="button">
+            <i class="fa-solid fa-code"></i> JSON
+          </button>
+
+          <button id="btnExportarCsv" class="btn" type="button">
+            <i class="fa-solid fa-file-csv"></i> CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="campo-pesquisa">
+        <input id="campoFiltro" type="text" class="pesquisa" placeholder="Pesquisar Cliente - nome/CPF">
         <i class="fa-solid fa-magnifying-glass"></i>
       </div>
 
-      <button class="btn" id="btnExportarJson" type="button">Exportar JSON</button>
-      <button class="btn" id="btnExportarCsv" type="button">Exportar CSV</button>
-      <button class="btn" id="btnExportarExcel" type="button">Exportar Excel</button>
+      <div class="filtro-container">
+        <button class="btn" type="button">
+          <i class="fa-solid fa-filter"></i> Filtrar
+        </button>
+
+        <div class="filtro-box">
+          <label><input class="filtro-campo" type="checkbox" value="nome" checked> Nome</label>
+          <label><input class="filtro-campo" type="checkbox" value="cpf" checked> CPF</label>
+          <label><input class="filtro-campo" type="checkbox" value="valor" checked> Valor</label>
+          <label><input class="filtro-campo" type="checkbox" value="vencimento" checked> Vencimento</label>
+          <label><input class="filtro-campo" type="checkbox" value="status" checked> Status</label>
+          <label><input class="filtro-campo" type="checkbox" value="ativo" checked> Ativo/Inativo</label>
+          <label><input class="filtro-campo" type="checkbox" value="ultimoPagamento" checked> Último Pagamento</label>
+          <label><input class="filtro-campo" type="checkbox" value="diasAtraso" checked> Dias em Atraso</label>
+          <label><input class="filtro-campo" type="checkbox" value="telefone" checked> Telefone/Whatsapp</label>
+          <label><input class="filtro-campo" type="checkbox" value="endereco" checked> Endereço</label>
+          <label><input class="filtro-campo" type="checkbox" value="email" checked> E-mail</label>
+
+          <button id="btnAplicarFiltro" class="btn" type="button">
+            <i class="fa-solid fa-check"></i> Aplicar
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="painel-filtros">
-      <div class="painel-filtros-titulo">
-        <i class="fa-solid fa-filter"></i>
-        Campos do filtro / colunas visíveis
-      </div>
-
-      <div class="grid-filtros">
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="nome" checked><span>Nome</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="ultimoPagamento" checked><span>Último pagamento</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="cpf" checked><span>CPF</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="status" checked><span>Status</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="valor" checked><span>Valor</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="ativo" checked><span>Ativo/Inativo</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="vencimento" checked><span>Vencimento</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="email" checked><span>E-mail</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="diaVenc" checked><span>Dia/Venc</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="telefone" checked><span>Telefone/Whatsapp</span></label>
-        <label class="item-filtro"><input type="checkbox" class="filtro-campo" value="endereco" checked><span>Endereço</span></label>
-      </div>
-    </div>
-
-    <table id="tabelaClientes" class="tabela-clientes">
+    <table id="tabelaExportacao" class="tabela-clientes">
       <thead>
         <tr>
           <th data-coluna="nome">Nome</th>
           <th data-coluna="cpf">CPF</th>
-          <th data-coluna="email">E-mail</th>
-          <th data-coluna="telefone">Telefone/Whatsapp</th>
-          <th data-coluna="endereco">Endereço</th>
           <th data-coluna="valor">Valor</th>
           <th data-coluna="vencimento">Vencimento</th>
-          <th data-coluna="diaVenc">Dia/Venc</th>
           <th data-coluna="status">Status</th>
           <th data-coluna="ativo">Ativo/Inativo</th>
-          <th data-coluna="ultimoPagamento">Último pagamento</th>
+          <th data-coluna="ultimoPagamento">Último Pagamento</th>
+          <th data-coluna="diasAtraso">Dias em Atraso</th>
+          <th data-coluna="telefone">Telefone/Whatsapp</th>
+          <th data-coluna="endereco">Endereço</th>
+          <th data-coluna="email">E-mail</th>
         </tr>
       </thead>
-      <tbody id="corpoTabelaClientes"></tbody>
+
+      <tbody id="tabela-body">
+        <tr>
+          <td colspan="11" class="mensagem-vazia">Nenhum cliente encontrado.</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 

@@ -1,38 +1,23 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const btnEditar = document.getElementById("btn-editar");
-  const btnCancelar = document.getElementById("btn-cancelar");
-  const btnConfirmar = document.getElementById("btn-confirmar");
-  const pesquisa = document.getElementById("pesquisa");
+document.addEventListener("DOMContentLoaded", function () {
+  const btnEditar = document.getElementById("btnEditarPagamento");
+  const pesquisa = document.getElementById("campoFiltro");
   const modal = document.getElementById("modal-pagamento");
 
-  const inputNome = document.getElementById("input-nome");
-  const inputCpf = document.getElementById("input-cpf");
-  const inputValor = document.getElementById("input-valor");
-  const inputVencimento = document.getElementById("input-vencimento");
-  const inputStatus = document.getElementById("input-status");
-  const inputAtivo = document.getElementById("input-ativo");
-  const inputUltimoPagamento = document.getElementById("input-ultimo-pagamento");
-  const inputAtraso = document.getElementById("input-atraso");
+  let clientesCache = [];
+  let cpfEditando = "";
 
-  let cpfOriginal = null;
-  let timeoutPesquisa = null;
+  function mostrarErro(msg) {
+    if (window.uiFeedback?.error) window.uiFeedback.error(msg);
+    else alert(msg);
+  }
 
-  function modalAberto() {
-    return !modal.classList.contains("hidden");
+  function mostrarSucesso(msg) {
+    if (window.uiFeedback?.success) window.uiFeedback.success(msg);
+    else alert(msg);
   }
 
   function limparCPF(cpf) {
     return String(cpf || "").replace(/\D/g, "").slice(0, 11);
-  }
-
-  function formatarCPF(cpf) {
-    const numeros = limparCPF(cpf);
-    if (!numeros) return "";
-
-    return numeros
-      .replace(/^(\d{3})(\d)/, "$1.$2")
-      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1-$2");
   }
 
   function normalizarTexto(valor) {
@@ -43,24 +28,30 @@ document.addEventListener("DOMContentLoaded", async () => {
       .replace(/[\u0300-\u036f]/g, "");
   }
 
-  function ordenarClientesPorNome(clientes) {
-    return [...clientes].sort((a, b) =>
-      String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", {
-        sensitivity: "base"
-      })
-    );
+  function formatarCPF(cpf) {
+    const n = limparCPF(cpf);
+    if (n.length !== 11) return n;
+    return `${n.slice(0, 3)}.${n.slice(3, 6)}.${n.slice(6, 9)}-${n.slice(9, 11)}`;
   }
 
-  function abrirModal() {
-    document.body.classList.add("modal-aberto");
-    modal.classList.remove("hidden");
-    inputNome.focus();
+  function converterValorParaNumero(valor) {
+    const texto = String(valor || "")
+      .replace("R$", "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .trim();
+
+    if (!texto) return 0;
+
+    const numero = Number(texto);
+    return Number.isNaN(numero) ? null : numero;
   }
 
-  function fecharModal() {
-    document.body.classList.remove("modal-aberto");
-    modal.classList.add("hidden");
-    cpfOriginal = null;
+  function formatarMoeda(valor) {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    });
   }
 
   function converterDataParaInput(data) {
@@ -68,352 +59,293 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const texto = String(data).trim();
 
-    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-      return texto;
-    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto;
 
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
-      const [dia, mes, ano] = texto.split("/");
-      return `${ano}-${mes}-${dia}`;
+      const partes = texto.split("/");
+      return `${partes[2]}-${partes[1]}-${partes[0]}`;
     }
 
     return "";
   }
 
-  function formatarDataParaExibicao(data) {
-    const dataInput = converterDataParaInput(data);
-    if (!dataInput) return "-";
-
-    const [ano, mes, dia] = dataInput.split("-");
-    return `${dia}/${mes}/${ano}`;
+  function formatarData(data) {
+    const d = converterDataParaInput(data);
+    if (!d) return "-";
+    return `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
   }
 
   function criarDataLocal(data) {
-    const dataConvertida = converterDataParaInput(data);
+    const d = converterDataParaInput(data);
+    if (!d) return null;
 
-    if (!dataConvertida) return null;
+    const dataLocal = new Date(d + "T00:00:00");
+    if (Number.isNaN(dataLocal.getTime())) return null;
 
-    const dataLocal = new Date(`${dataConvertida}T00:00:00`);
-    return Number.isNaN(dataLocal.getTime()) ? null : dataLocal;
+    return dataLocal;
   }
 
-  function formatarMoeda(valor) {
-    const numero = Number(valor) || 0;
+  function obterStatusAutomatico(cliente) {
+  const statusManual = String(cliente.statusPagamento || "").trim();
 
-    return numero.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    });
+  if (statusManual === "Pago") {
+    return "Pago";
   }
 
-  function formatarMoedaSemSimbolo(valor) {
-    const numero = Number(valor);
-    if (!Number.isFinite(numero)) return "";
+  const vencimento = criarDataLocal(cliente.vencimento);
+  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
 
-    return numero.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+  if (!vencimento) {
+    return "Pendente";
   }
 
-  function converterValorParaNumero(valorTexto) {
-    if (valorTexto === null || valorTexto === undefined) return null;
-
-    const textoLimpo = String(valorTexto)
-      .replaceAll("R$", "")
-      .replace(/\s/g, "")
-      .replaceAll(".", "")
-      .replace(",", ".")
-      .trim();
-
-    if (!textoLimpo) return null;
-
-    const numero = Number(textoLimpo);
-    return Number.isNaN(numero) ? null : numero;
-  }
-
-  function obterStatusAutomatico(vencimento, ultimoPagamento = "") {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const dataVencimento = criarDataLocal(vencimento);
-    const dataPagamento = criarDataLocal(ultimoPagamento);
-
-    if (!dataVencimento) {
-      return "Pendente";
-    }
-
-    if (dataPagamento && dataPagamento.getTime() >= dataVencimento.getTime()) {
+  if (ultimoPagamento) {
+    if (ultimoPagamento.getTime() >= vencimento.getTime()) {
       return "Pago";
     }
 
-    if (hoje.getTime() > dataVencimento.getTime()) {
+    const diasEntrePagamentoEVencimento = Math.floor(
+      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+    );
+
+    if (diasEntrePagamentoEVencimento > 31) {
       return "Atrasado";
     }
 
     return "Pendente";
   }
 
-  function obterDiasSituacao(vencimento, ultimoPagamento = "") {
-    const status = obterStatusAutomatico(vencimento, ultimoPagamento);
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
 
-    if (status === "Pago") {
-      return "Pago";
-    }
-
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const dataVencimento = criarDataLocal(vencimento);
-
-    if (!dataVencimento) {
-      return "-";
-    }
-
-    const diferenca = dataVencimento.getTime() - hoje.getTime();
-    const dias = Math.abs(Math.floor(diferenca / (1000 * 60 * 60 * 24)));
-
-    if (status === "Atrasado") {
-      return `${dias} dias em atraso`;
-    }
-
-    return `${dias} dias para vencer`;
+  if (hoje.getTime() > vencimento.getTime()) {
+    return "Atrasado";
   }
 
-  function obterDiasAtrasoNumerico(vencimento, ultimoPagamento = "") {
-    const status = obterStatusAutomatico(vencimento, ultimoPagamento);
+  return "Pendente";
+}
 
-    if (status !== "Atrasado") {
-      return 0;
-    }
+  function exibirDias(cliente) {
+  const status = obterStatusAutomatico(cliente);
+  const vencimento = criarDataLocal(cliente.vencimento);
+  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
 
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const dataVencimento = criarDataLocal(vencimento);
-
-    if (!dataVencimento) {
-      return 0;
-    }
-
-    const diferenca = hoje.getTime() - dataVencimento.getTime();
-    const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
-
-    return dias > 0 ? dias : 0;
+  if (status === "Pago") {
+    return "Pago";
   }
 
-  function atualizarCamposAutomaticos() {
-    const status = obterStatusAutomatico(
-      inputVencimento.value,
-      inputUltimoPagamento.value
+  if (!vencimento) {
+    return "-";
+  }
+
+  if (ultimoPagamento && ultimoPagamento.getTime() < vencimento.getTime()) {
+    const diasEntrePagamentoEVencimento = Math.floor(
+      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
     );
 
-    inputStatus.value = status;
-    inputAtraso.value = obterDiasSituacao(
-      inputVencimento.value,
-      inputUltimoPagamento.value
+    if (diasEntrePagamentoEVencimento > 31) {
+      return `${diasEntrePagamentoEVencimento} dias em atraso`;
+    }
+
+    return `${diasEntrePagamentoEVencimento} dias`;
+  }
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const diasPeloVencimento = Math.floor(
+    (vencimento.getTime() - hoje.getTime()) / 86400000
+  );
+
+  if (status === "Atrasado") {
+    return `${Math.abs(diasPeloVencimento)} dias em atraso`;
+  }
+
+  return `${diasPeloVencimento} dias`;
+}
+
+  function ordenarClientesPorNome(clientes) {
+    return clientes.slice().sort(function (a, b) {
+      return String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR");
+    });
+  }
+
+  function clienteCombinaComPesquisa(cliente, termo) {
+    const termoTexto = normalizarTexto(termo);
+    const termoCpf = limparCPF(termo);
+
+    const nome = normalizarTexto(cliente.nome);
+    const cpf = limparCPF(cliente.cpf);
+
+    return (
+      nome.includes(termoTexto) ||
+      (termoCpf.length > 0 && cpf.includes(termoCpf))
     );
   }
 
-  async function obterPagamentoSelecionado() {
-    const selecionado = document.querySelector('input[name="pagamentoSelecionado"]:checked');
-    if (!selecionado) return null;
+  function obterSelecionado() {
+    const selecionado = document.querySelector(
+      'input[name="pagamentoSelecionado"]:checked'
+    );
 
-    const cpfSelecionado = limparCPF(selecionado.value);
-    const clientes = await obterClientes();
-
-    return clientes.find((item) => limparCPF(item.cpf) === cpfSelecionado) || null;
+    return selecionado ? limparCPF(selecionado.value) : "";
   }
 
-  async function abrirModalEdicao() {
-    try {
-      const cliente = await obterPagamentoSelecionado();
-
-      if (!cliente) {
-        window.uiFeedback.error("Selecione um pagamento para editar.");
-        return;
-      }
-
-      cpfOriginal = limparCPF(cliente.cpf);
-
-      inputNome.value = cliente.nome || "";
-      inputCpf.value = limparCPF(cliente.cpf || "");
-      inputValor.value = formatarMoedaSemSimbolo(cliente.valor);
-      inputVencimento.value = converterDataParaInput(cliente.vencimento);
-      inputAtivo.value = cliente.ativo || "Ativo";
-      inputUltimoPagamento.value = converterDataParaInput(cliente.ultimoPagamento);
-
-      atualizarCamposAutomaticos();
-      abrirModal();
-    } catch (erro) {
-      console.error("Erro ao abrir edição de pagamento:", erro);
-      window.uiFeedback.error("Erro ao abrir edição.");
-    }
-  }
-
-  async function salvarEdicaoPagamento() {
-    try {
-      if (!cpfOriginal) return;
-
-      const nome = inputNome.value.trim();
-      const cpf = limparCPF(inputCpf.value);
-      const valor = converterValorParaNumero(inputValor.value);
-      const vencimento = inputVencimento.value;
-      const ativo = inputAtivo.value;
-      const ultimoPagamento = inputUltimoPagamento.value;
-
-      const statusPagamento = obterStatusAutomatico(vencimento, ultimoPagamento);
-      const diasAtrasoManual = obterDiasAtrasoNumerico(vencimento, ultimoPagamento);
-
-      if (!nome || !cpf || cpf.length !== 11) {
-        window.uiFeedback.error("Nome e CPF válidos são obrigatórios.");
-        return;
-      }
-
-      if (valor === null) {
-        window.uiFeedback.error("Informe um valor válido.");
-        return;
-      }
-
-      const clientes = await obterClientes();
-      const clienteAtual = clientes.find((cliente) => limparCPF(cliente.cpf) === cpfOriginal);
-
-      if (!clienteAtual) {
-        window.uiFeedback.error("Cliente não encontrado.");
-        return;
-      }
-
-      const clienteAtualizado = {
-        ...clienteAtual,
-        nome,
-        cpf,
-        valor,
-        vencimento,
-        statusPagamento,
-        ativo,
-        ultimoPagamento,
-        diasAtrasoManual
-      };
-
-      await excluirCliente(cpfOriginal);
-      await adicionarClientes([clienteAtualizado]);
-      await renderizarPagamentos();
-      fecharModal();
-      window.uiFeedback.success("Pagamento atualizado com sucesso.");
-    } catch (erro) {
-      console.error("Erro ao salvar pagamento:", erro);
-      window.uiFeedback.error("Erro ao salvar pagamento.");
-    }
-  }
-
-  async function renderizarPagamentos(lista = null) {
+  function renderizarPagamentos(clientes) {
     const tabelaBody = document.getElementById("tabela-body");
-    if (!tabelaBody) return;
-
-    const clientes = lista || await obterClientes();
-    const clientesOrdenados = ordenarClientesPorNome(clientes);
+    const lista = ordenarClientesPorNome(clientes);
 
     tabelaBody.innerHTML = "";
 
-    if (!clientesOrdenados.length) {
+    if (lista.length === 0) {
       tabelaBody.innerHTML = `
         <tr>
-          <td colspan="9">Nenhum pagamento cadastrado.</td>
+          <td colspan="7" class="mensagem-vazia">
+            Nenhum pagamento cadastrado.
+          </td>
         </tr>
       `;
       return;
     }
 
-    clientesOrdenados.forEach((cliente) => {
-      const tr = document.createElement("tr");
+    lista.forEach(function (cliente) {
+      const linha = document.createElement("tr");
 
-      const statusCalculado = obterStatusAutomatico(
-        cliente.vencimento,
-        cliente.ultimoPagamento
-      );
-
-      const diasSituacao = obterDiasSituacao(
-        cliente.vencimento,
-        cliente.ultimoPagamento
-      );
-
-      tr.innerHTML = `
-        <td><input type="radio" name="pagamentoSelecionado" value="${limparCPF(cliente.cpf)}"></td>
+      linha.innerHTML = `
+        <td>
+          <input
+            class="checkbox-cliente"
+            type="radio"
+            name="pagamentoSelecionado"
+            value="${limparCPF(cliente.cpf)}"
+          >
+        </td>
         <td>${cliente.nome || ""}</td>
-        <td>${formatarCPF(cliente.cpf || "")}</td>
+        <td>${formatarCPF(cliente.cpf)}</td>
         <td>${formatarMoeda(cliente.valor)}</td>
-        <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-        <td>${statusCalculado}</td>
-        <td>${cliente.ativo || "Ativo"}</td>
-        <td>${formatarDataParaExibicao(cliente.ultimoPagamento)}</td>
-        <td>${diasSituacao}</td>
+        <td>${formatarData(cliente.vencimento)}</td>
+        <td>${obterStatusAutomatico(cliente)}</td>
+        <td>${exibirDias(cliente)}</td>
       `;
 
-      tabelaBody.appendChild(tr);
+      tabelaBody.appendChild(linha);
     });
   }
 
-  async function aplicarPesquisaPagamentos() {
-    if (modalAberto()) return;
+  function aplicarPesquisa() {
+    const termo = pesquisa.value.trim();
 
-    const valorPesquisa = pesquisa.value.trim();
-    const termoTexto = normalizarTexto(valorPesquisa);
-    const termoCpf = limparCPF(valorPesquisa);
-    const clientes = await obterClientes();
-
-    if (!valorPesquisa) {
-      await renderizarPagamentos();
+    if (!termo) {
+      renderizarPagamentos(clientesCache);
       return;
     }
 
-    const filtrados = clientes.filter((cliente) => {
-      const nome = normalizarTexto(cliente.nome || "");
-      const cpf = limparCPF(cliente.cpf || "");
-
-      return nome.includes(termoTexto) || (termoCpf && cpf.includes(termoCpf));
+    const filtrados = clientesCache.filter(function (cliente) {
+      return clienteCombinaComPesquisa(cliente, termo);
     });
 
-    await renderizarPagamentos(filtrados);
+    renderizarPagamentos(filtrados);
   }
 
-  btnEditar.addEventListener("click", abrirModalEdicao);
-  btnCancelar.addEventListener("click", fecharModal);
+  async function carregarPagamentos() {
+    const clientes = await obterClientes();
+    clientesCache = Array.isArray(clientes) ? clientes : [];
+    aplicarPesquisa();
+  }
 
-  btnConfirmar.addEventListener("click", async () => {
-    btnConfirmar.disabled = true;
-    try {
-      await salvarEdicaoPagamento();
-    } finally {
-      btnConfirmar.disabled = false;
+  function abrirModalEdicaoPagamento() {
+    const cpfSelecionado = obterSelecionado();
+
+    if (!cpfSelecionado) {
+      mostrarErro("Selecione um pagamento.");
+      return;
     }
-  });
 
-  inputCpf.addEventListener("blur", () => {
-    inputCpf.value = formatarCPF(inputCpf.value);
-  });
+    const cliente = clientesCache.find(function (item) {
+      return limparCPF(item.cpf) === cpfSelecionado;
+    });
 
-  inputValor.addEventListener("blur", () => {
-    const valor = converterValorParaNumero(inputValor.value);
-    inputValor.value = valor === null ? "" : formatarMoedaSemSimbolo(valor);
-  });
-
-  inputVencimento.addEventListener("change", atualizarCamposAutomaticos);
-  inputUltimoPagamento.addEventListener("change", atualizarCamposAutomaticos);
-
-  pesquisa.addEventListener("input", () => {
-    if (modalAberto()) return;
-
-    clearTimeout(timeoutPesquisa);
-    timeoutPesquisa = setTimeout(() => {
-      aplicarPesquisaPagamentos();
-    }, 200);
-  });
-
-  pesquisa.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      aplicarPesquisaPagamentos();
+    if (!cliente) {
+      mostrarErro("Cliente não encontrado.");
+      return;
     }
-  });
 
-  await renderizarPagamentos();
+    cpfEditando = cpfSelecionado;
+
+    document.getElementById("pagamento-nome").value = cliente.nome || "";
+    document.getElementById("pagamento-valor").value = cliente.valor || "";
+    document.getElementById("pagamento-vencimento").value =
+      converterDataParaInput(cliente.vencimento);
+    document.getElementById("pagamento-ultimo").value =
+      converterDataParaInput(cliente.ultimoPagamento);
+
+    document.getElementById("pagamento-status").value =
+      String(cliente.statusPagamento || "").trim() === "Pago"
+        ? "Pago"
+        : "Automatico";
+
+    document.body.classList.add("modal-aberto");
+    modal.classList.remove("hidden");
+  }
+
+  function fecharModalPagamento() {
+    document.body.classList.remove("modal-aberto");
+    modal.classList.add("hidden");
+    cpfEditando = "";
+  }
+
+  async function salvarPagamentoEditado() {
+    const valor = converterValorParaNumero(
+      document.getElementById("pagamento-valor").value
+    );
+
+    const vencimento = document.getElementById("pagamento-vencimento").value;
+    const ultimoPagamento = document.getElementById("pagamento-ultimo").value;
+    const statusSelecionado = document.getElementById("pagamento-status").value;
+
+    if (valor === null) {
+      mostrarErro("Informe um valor válido.");
+      return;
+    }
+
+    if (!vencimento) {
+      mostrarErro("Informe a data de vencimento.");
+      return;
+    }
+
+    clientesCache = clientesCache.map(function (cliente) {
+      if (limparCPF(cliente.cpf) !== cpfEditando) {
+        return cliente;
+      }
+
+      return {
+        ...cliente,
+        valor: valor,
+        vencimento: vencimento,
+        ultimoPagamento: ultimoPagamento || "",
+        statusPagamento: statusSelecionado === "Pago" ? "Pago" : "",
+        diasAtrasoManual: ""
+      };
+    });
+
+    await salvarClientes(clientesCache);
+
+    fecharModalPagamento();
+    mostrarSucesso("Pagamento atualizado.");
+
+    await carregarPagamentos();
+  }
+
+  pesquisa.addEventListener("input", aplicarPesquisa);
+  btnEditar.addEventListener("click", abrirModalEdicaoPagamento);
+
+  document
+    .getElementById("btnCancelarPagamento")
+    .addEventListener("click", fecharModalPagamento);
+
+  document
+    .getElementById("btnSalvarPagamento")
+    .addEventListener("click", salvarPagamentoEditado);
+
+  carregarPagamentos();
 });

@@ -1,490 +1,407 @@
-let clientesOriginais = [];
-let clientesFiltrados = [];
-let timeoutPesquisaImportacao = null;
-
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", function () {
   const campoFiltro = document.getElementById("campoFiltro");
+  const tabelaBody = document.getElementById("tabela-body");
+  const checkboxes = document.querySelectorAll(".filtro-campo");
+  const btnAplicarFiltro = document.getElementById("btnAplicarFiltro");
+  const btnExportarExcel = document.getElementById("btnExportarExcel");
   const btnExportarJson = document.getElementById("btnExportarJson");
   const btnExportarCsv = document.getElementById("btnExportarCsv");
-  const btnExportarExcel = document.getElementById("btnExportarExcel");
 
-  await carregarClientes();
-  aplicarFiltro();
+  let clientesCache = [];
+  let clientesFiltradosAtuais = [];
 
-  document.querySelectorAll(".filtro-campo").forEach((checkbox) => {
-    checkbox.addEventListener("change", () => {
-      aplicarFiltro();
+  const mapaColunas = {
+    nome: "Nome",
+    cpf: "CPF",
+    valor: "Valor",
+    vencimento: "Vencimento",
+    status: "Status",
+    ativo: "Ativo/Inativo",
+    ultimoPagamento: "Último Pagamento",
+    diasAtraso: "Dias",
+    telefone: "Telefone/Whatsapp",
+    endereco: "Endereço",
+    email: "E-mail"
+  };
+
+  function limparCPF(cpf) {
+    return String(cpf || "").replace(/\D/g, "").slice(0, 11);
+  }
+
+  function limparTelefone(telefone) {
+    return String(telefone || "").replace(/\D/g, "");
+  }
+
+  function formatarCPF(cpf) {
+    const n = limparCPF(cpf);
+
+    if (n.length !== 11) {
+      return n;
+    }
+
+    return `${n.slice(0, 3)}.${n.slice(3, 6)}.${n.slice(6, 9)}-${n.slice(9, 11)}`;
+  }
+
+  function formatarTelefone(telefone) {
+    const numero = limparTelefone(telefone);
+
+    if (numero.length === 11) {
+      return `(${numero.slice(0, 2)}) ${numero.slice(2, 7)}-${numero.slice(7, 11)}`;
+    }
+
+    if (numero.length === 10) {
+      return `(${numero.slice(0, 2)}) ${numero.slice(2, 6)}-${numero.slice(6, 10)}`;
+    }
+
+    return telefone || "";
+  }
+
+  function normalizarTexto(valor) {
+    return String(valor || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function formatarMoeda(valor) {
+    return Number(valor || 0).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
     });
-  });
+  }
 
-  campoFiltro.addEventListener("input", () => {
-    clearTimeout(timeoutPesquisaImportacao);
-    timeoutPesquisaImportacao = setTimeout(() => {
-      aplicarFiltro();
-    }, 200);
-  });
+  function converterDataParaInput(data) {
+    if (!data) return "";
 
-  campoFiltro.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      aplicarFiltro();
+    const texto = String(data).trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+      return texto;
     }
-  });
 
-  if (btnExportarJson) {
-    btnExportarJson.addEventListener("click", () => exportarDados("json"));
-  }
-
-  if (btnExportarCsv) {
-    btnExportarCsv.addEventListener("click", () => exportarDados("csv"));
-  }
-
-  if (btnExportarExcel) {
-    btnExportarExcel.addEventListener("click", () => exportarDados("xlsx"));
-  }
-});
-
-async function carregarClientes() {
-  try {
-    const clientes = await obterClientes();
-    clientesOriginais = Array.isArray(clientes) ? clientes : [];
-    clientesFiltrados = [...clientesOriginais];
-    renderizarTabela(clientesFiltrados);
-    aplicarVisibilidadeColunas();
-  } catch (erro) {
-    console.error("Erro ao carregar clientes:", erro);
-    if (window.uiFeedback?.error) {
-      window.uiFeedback.error("Erro ao carregar os dados dos clientes.");
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+      const partes = texto.split("/");
+      return `${partes[2]}-${partes[1]}-${partes[0]}`;
     }
+
+    return "";
   }
+
+  function formatarData(data) {
+    const d = converterDataParaInput(data);
+
+    if (!d) return "-";
+
+    return `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
+  }
+
+  function criarDataLocal(data) {
+    const d = converterDataParaInput(data);
+
+    if (!d) return null;
+
+    const dataLocal = new Date(d + "T00:00:00");
+
+    if (Number.isNaN(dataLocal.getTime())) {
+      return null;
+    }
+
+    return dataLocal;
+  }
+
+    function obterStatusAutomatico(cliente) {
+  const statusManual = String(cliente.statusPagamento || "").trim();
+
+  if (statusManual === "Pago") {
+    return "Pago";
+  }
+
+  const vencimento = criarDataLocal(cliente.vencimento);
+  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
+
+  if (!vencimento) {
+    return "Pendente";
+  }
+
+  if (ultimoPagamento) {
+    if (ultimoPagamento.getTime() >= vencimento.getTime()) {
+      return "Pago";
+    }
+
+    const diasEntrePagamentoEVencimento = Math.floor(
+      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+    );
+
+    if (diasEntrePagamentoEVencimento > 31) {
+      return "Atrasado";
+    }
+
+    return "Pendente";
+  }
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  if (hoje.getTime() > vencimento.getTime()) {
+    return "Atrasado";
+  }
+
+  return "Pendente";
 }
 
-function normalizarTexto(valor) {
-  return String(valor || "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  function exibirDias(cliente) {
+  const status = obterStatusAutomatico(cliente);
+  const vencimento = criarDataLocal(cliente.vencimento);
+  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
+
+  if (status === "Pago") {
+    return "Pago";
+  }
+
+  if (!vencimento) {
+    return "-";
+  }
+
+  if (ultimoPagamento && ultimoPagamento.getTime() < vencimento.getTime()) {
+    const diasEntrePagamentoEVencimento = Math.floor(
+      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+    );
+
+    if (diasEntrePagamentoEVencimento > 31) {
+      return `${diasEntrePagamentoEVencimento} dias em atraso`;
+    }
+
+    return `${diasEntrePagamentoEVencimento} dias`;
+  }
+
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const diasPeloVencimento = Math.floor(
+    (vencimento.getTime() - hoje.getTime()) / 86400000
+  );
+
+  if (status === "Atrasado") {
+    return `${Math.abs(diasPeloVencimento)} dias em atraso`;
+  }
+
+  return `${diasPeloVencimento} dias`;
 }
 
-function limparCPF(cpf) {
-  return String(cpf || "").replace(/\D/g, "").slice(0, 11);
-}
+  function obterColunasSelecionadas() {
+    const selecionadas = Array.from(checkboxes)
+      .filter(function (checkbox) {
+        return checkbox.checked;
+      })
+      .map(function (checkbox) {
+        return checkbox.value;
+      });
 
-function formatarCPF(cpf) {
-  const numeros = limparCPF(cpf);
-  if (!numeros) return "";
+    if (selecionadas.length > 0) {
+      return selecionadas;
+    }
 
-  return numeros
-    .replace(/^(\d{3})(\d)/, "$1.$2")
-    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-    .replace(/\.(\d{3})(\d)/, ".$1-$2");
-}
+    return Object.keys(mapaColunas);
+  }
 
-function limparTelefone(telefone) {
-  return String(telefone || "").replace(/\D/g, "").slice(0, 11);
-}
+  function clienteCombinaComPesquisa(cliente, termo) {
+    const termoTexto = normalizarTexto(termo);
+    const termoNumero = String(termo || "").replace(/\D/g, "");
 
-function formatarTelefone(telefone) {
-  const numeros = limparTelefone(telefone);
-  if (!numeros) return "";
+    const nome = normalizarTexto(cliente.nome);
+    const cpf = limparCPF(cliente.cpf);
+    const telefone = limparTelefone(cliente.telefone);
+    const email = normalizarTexto(cliente.email);
 
-  if (numeros.length <= 10) {
-    return numeros.replace(
-      /^(\d{2})(\d{4})(\d{0,4}).*/,
-      (_, ddd, parte1, parte2) =>
-        parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`
+    return (
+      nome.includes(termoTexto) ||
+      email.includes(termoTexto) ||
+      (termoNumero.length > 0 && cpf.includes(termoNumero)) ||
+      (termoNumero.length > 0 && telefone.includes(termoNumero))
     );
   }
 
-  return numeros.replace(
-    /^(\d{2})(\d{5})(\d{0,4}).*/,
-    (_, ddd, parte1, parte2) =>
-      parte2 ? `(${ddd}) ${parte1}-${parte2}` : `(${ddd}) ${parte1}`
-  );
-}
-
-function converterDataParaInput(data) {
-  if (!data) return "";
-
-  const texto = String(data).trim();
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-    return texto;
-  }
-
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
-    const [dia, mes, ano] = texto.split("/");
-    return `${ano}-${mes}-${dia}`;
-  }
-
-  return "";
-}
-
-function formatarDataParaExibicao(data) {
-  const dataConvertida = converterDataParaInput(data);
-
-  if (!dataConvertida) {
-    return data ? String(data) : "";
-  }
-
-  const [ano, mes, dia] = dataConvertida.split("-");
-  return `${dia}/${mes}/${ano}`;
-}
-
-function obterDiaVencimento(data) {
-  const dataConvertida = converterDataParaInput(data);
-  if (!dataConvertida) return "";
-
-  const [, , dia] = dataConvertida.split("-");
-  return dia;
-}
-
-function converterValorParaNumero(valorTexto) {
-  if (valorTexto === null || valorTexto === undefined) return null;
-
-  const textoLimpo = String(valorTexto)
-    .replaceAll("R$", "")
-    .replace(/\s/g, "")
-    .replaceAll(".", "")
-    .replace(",", ".")
-    .trim();
-
-  if (!textoLimpo) return null;
-
-  const numero = Number(textoLimpo);
-  return Number.isNaN(numero) ? null : numero;
-}
-
-function formatarMoeda(valor) {
-  const numero = converterValorParaNumero(valor);
-
-  if (numero === null) {
-    return valor ? String(valor) : "";
-  }
-
-  return numero.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
-  });
-}
-
-function obterValorCampo(cliente, nomesCampos) {
-  for (const nome of nomesCampos) {
-    if (cliente[nome] !== undefined && cliente[nome] !== null && cliente[nome] !== "") {
-      return cliente[nome];
-    }
-  }
-  return "";
-}
-
-function obterCamposSelecionados() {
-  return Array.from(document.querySelectorAll(".filtro-campo:checked")).map(
-    (checkbox) => checkbox.value
-  );
-}
-
-function aplicarVisibilidadeColunas() {
-  const camposSelecionados = obterCamposSelecionados();
-
-  document.querySelectorAll("[data-coluna]").forEach((elemento) => {
-    const coluna = elemento.getAttribute("data-coluna");
-
-    if (camposSelecionados.includes(coluna)) {
-      elemento.classList.remove("coluna-oculta");
-    } else {
-      elemento.classList.add("coluna-oculta");
-    }
-  });
-}
-
-function aplicarFiltro() {
-  const campoTexto = document.getElementById("campoFiltro");
-  const termoOriginal = campoTexto ? campoTexto.value.trim() : "";
-  const termoTexto = normalizarTexto(termoOriginal);
-  const termoCpf = limparCPF(termoOriginal);
-  const camposSelecionados = obterCamposSelecionados();
-
-  if (!camposSelecionados.length) {
-    clientesFiltrados = [];
-    renderizarTabela(clientesFiltrados);
-    aplicarVisibilidadeColunas();
-    return;
-  }
-
-  if (!termoOriginal) {
-    clientesFiltrados = [...clientesOriginais];
-    renderizarTabela(clientesFiltrados);
-    aplicarVisibilidadeColunas();
-    return;
-  }
-
-  clientesFiltrados = clientesOriginais.filter((cliente) => {
-    const dadosCliente = {
-      nome: normalizarTexto(obterValorCampo(cliente, ["nome"])),
-      cpf: limparCPF(obterValorCampo(cliente, ["cpf"])),
-      email: normalizarTexto(obterValorCampo(cliente, ["email"])),
-      telefone: normalizarTexto(obterValorCampo(cliente, ["telefone", "telefoneWhatsapp"])),
-      endereco: normalizarTexto(obterValorCampo(cliente, ["endereco"])),
-      valor: normalizarTexto(formatarMoeda(obterValorCampo(cliente, ["valor"]))),
-      vencimento: normalizarTexto(
-        formatarDataParaExibicao(obterValorCampo(cliente, ["vencimento"]))
-      ),
-      diaVenc: normalizarTexto(
-        obterDiaVencimento(obterValorCampo(cliente, ["vencimento"]))
-      ),
-      status: normalizarTexto(obterValorCampo(cliente, ["statusPagamento", "status"])),
-      ativo: normalizarTexto(obterValorCampo(cliente, ["ativo", "situacao"])),
-      ultimoPagamento: normalizarTexto(
-        formatarDataParaExibicao(
-          obterValorCampo(cliente, ["ultimoPagamento", "ultimo_pagamento"])
-        )
-      )
+  function montarObjetoCliente(cliente) {
+    return {
+      nome: cliente.nome || "",
+      cpf: formatarCPF(cliente.cpf),
+      valor: formatarMoeda(cliente.valor),
+      vencimento: formatarData(cliente.vencimento),
+      status: obterStatusAutomatico(cliente),
+      ativo: cliente.ativo || "Ativo",
+      ultimoPagamento: formatarData(cliente.ultimoPagamento),
+      diasAtraso: exibirDias(cliente),
+      telefone: formatarTelefone(cliente.telefone),
+      endereco: cliente.endereco || "",
+      email: cliente.email || ""
     };
+  }
 
-    return camposSelecionados.some((campo) => {
-      if (campo === "cpf") {
-        return termoCpf ? dadosCliente.cpf.includes(termoCpf) : false;
+  function aplicarFiltroColunas() {
+    const colunasSelecionadas = obterColunasSelecionadas();
+
+    document.querySelectorAll("[data-coluna]").forEach(function (celula) {
+      const coluna = celula.getAttribute("data-coluna");
+
+      if (colunasSelecionadas.includes(coluna)) {
+        celula.classList.remove("coluna-oculta");
+      } else {
+        celula.classList.add("coluna-oculta");
       }
-
-      return termoTexto
-        ? String(dadosCliente[campo] || "").includes(termoTexto)
-        : false;
     });
-  });
-
-  renderizarTabela(clientesFiltrados);
-  aplicarVisibilidadeColunas();
-}
-
-function renderizarTabela(clientes) {
-  const corpoTabela =
-    document.getElementById("corpoTabelaClientes") ||
-    document.getElementById("tabela-body") ||
-    document.querySelector("#tabelaClientes tbody");
-
-  if (!corpoTabela) {
-    console.error("Corpo da tabela não encontrado.");
-    return;
   }
 
-  corpoTabela.innerHTML = "";
+  function renderizarTabela(lista) {
+    clientesFiltradosAtuais = lista.slice();
 
-  if (!clientes.length) {
-    corpoTabela.innerHTML = `
-      <tr>
-        <td colspan="11" class="mensagem-vazia">Nenhum cliente encontrado.</td>
-      </tr>
-    `;
-    return;
-  }
+    tabelaBody.innerHTML = "";
 
-  const clientesOrdenados = [...clientes].sort((a, b) =>
-    String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", {
-      sensitivity: "base"
-    })
-  );
+    if (lista.length === 0) {
+      tabelaBody.innerHTML = `
+        <tr>
+          <td colspan="11" class="mensagem-vazia">Nenhum cliente encontrado.</td>
+        </tr>
+      `;
+      return;
+    }
 
-  clientesOrdenados.forEach((cliente) => {
-    const nome = obterValorCampo(cliente, ["nome"]);
-    const cpf = obterValorCampo(cliente, ["cpf"]);
-    const email = obterValorCampo(cliente, ["email"]);
-    const telefone = obterValorCampo(cliente, ["telefone", "telefoneWhatsapp"]);
-    const endereco = obterValorCampo(cliente, ["endereco"]);
-    const valor = obterValorCampo(cliente, ["valor"]);
-    const vencimento = obterValorCampo(cliente, ["vencimento"]);
-    const status = obterValorCampo(cliente, ["statusPagamento", "status"]);
-    const ativo = obterValorCampo(cliente, ["ativo", "situacao"]);
-    const ultimoPagamento = obterValorCampo(cliente, ["ultimoPagamento", "ultimo_pagamento"]);
+    lista.forEach(function (cliente) {
+      const dados = montarObjetoCliente(cliente);
+      const linha = document.createElement("tr");
 
-    const linha = document.createElement("tr");
+      linha.innerHTML = `
+        <td data-coluna="nome">${dados.nome}</td>
+        <td data-coluna="cpf">${dados.cpf}</td>
+        <td data-coluna="valor">${dados.valor}</td>
+        <td data-coluna="vencimento">${dados.vencimento}</td>
+        <td data-coluna="status">${dados.status}</td>
+        <td data-coluna="ativo">${dados.ativo}</td>
+        <td data-coluna="ultimoPagamento">${dados.ultimoPagamento}</td>
+        <td data-coluna="diasAtraso">${dados.diasAtraso}</td>
+        <td data-coluna="telefone">${dados.telefone}</td>
+        <td data-coluna="endereco">${dados.endereco}</td>
+        <td data-coluna="email">${dados.email}</td>
+      `;
 
-    linha.innerHTML = `
-      <td data-coluna="nome">${nome || ""}</td>
-      <td data-coluna="cpf">${formatarCPF(cpf || "")}</td>
-      <td data-coluna="email">${email || ""}</td>
-      <td data-coluna="telefone">${formatarTelefone(telefone || "")}</td>
-      <td data-coluna="endereco">${endereco || ""}</td>
-      <td data-coluna="valor">${formatarMoeda(valor || "")}</td>
-      <td data-coluna="vencimento">${formatarDataParaExibicao(vencimento || "")}</td>
-      <td data-coluna="diaVenc">${obterDiaVencimento(vencimento || "")}</td>
-      <td data-coluna="status">${status || ""}</td>
-      <td data-coluna="ativo">${ativo || ""}</td>
-      <td data-coluna="ultimoPagamento">${formatarDataParaExibicao(ultimoPagamento || "")}</td>
-    `;
-
-    corpoTabela.appendChild(linha);
-  });
-}
-
-function prepararDadosExportacao(clientes) {
-  const camposSelecionados = obterCamposSelecionados();
-
-  return clientes.map((cliente) => {
-    const registro = {
-      nome: obterValorCampo(cliente, ["nome"]) || "",
-      cpf: formatarCPF(obterValorCampo(cliente, ["cpf"]) || ""),
-      email: obterValorCampo(cliente, ["email"]) || "",
-      telefone: formatarTelefone(
-        obterValorCampo(cliente, ["telefone", "telefoneWhatsapp"]) || ""
-      ),
-      endereco: obterValorCampo(cliente, ["endereco"]) || "",
-      valor: formatarMoeda(obterValorCampo(cliente, ["valor"]) || ""),
-      vencimento: formatarDataParaExibicao(
-        obterValorCampo(cliente, ["vencimento"]) || ""
-      ),
-      diaVenc: obterDiaVencimento(
-        obterValorCampo(cliente, ["vencimento"]) || ""
-      ),
-      status: obterValorCampo(cliente, ["statusPagamento", "status"]) || "",
-      ativo: obterValorCampo(cliente, ["ativo", "situacao"]) || "",
-      ultimoPagamento: formatarDataParaExibicao(
-        obterValorCampo(cliente, ["ultimoPagamento", "ultimo_pagamento"]) || ""
-      )
-    };
-
-    const resultado = {};
-
-    camposSelecionados.forEach((campo) => {
-      resultado[campo] = registro[campo];
+      tabelaBody.appendChild(linha);
     });
 
-    return resultado;
-  });
-}
+    aplicarFiltroColunas();
+  }
 
-function obterRotulosCampos() {
-  return {
-    nome: "Nome",
-    cpf: "CPF",
-    email: "E-mail",
-    telefone: "Telefone/Whatsapp",
-    endereco: "Endereço",
-    valor: "Valor",
-    vencimento: "Vencimento",
-    diaVenc: "Dia/Venc",
-    status: "Status",
-    ativo: "Ativo/Inativo",
-    ultimoPagamento: "Último Pagamento"
-  };
-}
+  function aplicarPesquisa() {
+    const termo = campoFiltro.value.trim();
 
-function exportarDados(tipo) {
-  const camposSelecionados = obterCamposSelecionados();
-
-  if (!camposSelecionados.length) {
-    if (window.uiFeedback?.error) {
-      window.uiFeedback.error("Selecione pelo menos um campo para exportar.");
+    if (!termo) {
+      renderizarTabela(clientesCache);
+      return;
     }
-    return;
-  }
 
-  if (!clientesFiltrados.length) {
-    if (window.uiFeedback?.error) {
-      window.uiFeedback.error("Nenhum cliente para exportar.");
-    }
-    return;
-  }
-
-  if (tipo === "json") {
-    exportarJSON(clientesFiltrados);
-    return;
-  }
-
-  if (tipo === "csv") {
-    exportarCSV(clientesFiltrados);
-    return;
-  }
-
-  if (tipo === "xlsx") {
-    exportarExcel(clientesFiltrados);
-  }
-}
-
-function exportarJSON(clientes) {
-  const dados = prepararDadosExportacao(clientes);
-  const blob = new Blob([JSON.stringify(dados, null, 2)], {
-    type: "application/json"
-  });
-
-  baixarArquivo(blob, "clientes.json");
-
-  if (window.uiFeedback?.success) {
-    window.uiFeedback.success("Arquivo JSON exportado com sucesso.");
-  }
-}
-
-function exportarCSV(clientes) {
-  const dados = prepararDadosExportacao(clientes);
-  const camposSelecionados = obterCamposSelecionados();
-  const rotulos = obterRotulosCampos();
-
-  const cabecalho = camposSelecionados.map((campo) => rotulos[campo]);
-
-  const linhas = dados.map((registro) =>
-    camposSelecionados.map((campo) => registro[campo] || "")
-  );
-
-  const csv = [
-    cabecalho.join(";"),
-    ...linhas.map((linha) =>
-      linha.map((valor) => `"${String(valor).replace(/"/g, '""')}"`).join(";")
-    )
-  ].join("\n");
-
-  const blob = new Blob([csv], {
-    type: "text/csv;charset=utf-8;"
-  });
-
-  baixarArquivo(blob, "clientes.csv");
-
-  if (window.uiFeedback?.success) {
-    window.uiFeedback.success("Arquivo CSV exportado com sucesso.");
-  }
-}
-
-function exportarExcel(clientes) {
-  if (typeof XLSX === "undefined") {
-    console.error("Biblioteca XLSX não carregada.");
-    if (window.uiFeedback?.error) {
-      window.uiFeedback.error("Erro ao exportar Excel. Biblioteca XLSX não encontrada.");
-    }
-    return;
-  }
-
-  const dados = prepararDadosExportacao(clientes);
-  const camposSelecionados = obterCamposSelecionados();
-  const rotulos = obterRotulosCampos();
-
-  const dadosFormatados = dados.map((registro) => {
-    const linha = {};
-
-    camposSelecionados.forEach((campo) => {
-      linha[rotulos[campo]] = registro[campo] || "";
+    const filtrados = clientesCache.filter(function (cliente) {
+      return clienteCombinaComPesquisa(cliente, termo);
     });
 
-    return linha;
-  });
-
-  const planilha = XLSX.utils.json_to_sheet(dadosFormatados);
-  const workbook = XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(workbook, planilha, "Clientes");
-  XLSX.writeFile(workbook, "clientes.xlsx");
-
-  if (window.uiFeedback?.success) {
-    window.uiFeedback.success("Arquivo Excel exportado com sucesso.");
+    renderizarTabela(filtrados);
   }
-}
 
-function baixarArquivo(blob, nomeArquivo) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+  async function carregarClientes() {
+    const clientes = await obterClientes();
 
-  link.href = url;
-  link.download = nomeArquivo;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+    clientesCache = Array.isArray(clientes) ? clientes : [];
 
-  URL.revokeObjectURL(url);
-}
+    aplicarPesquisa();
+  }
+
+  function obterDadosExportacao() {
+    const colunasSelecionadas = obterColunasSelecionadas();
+
+    return clientesFiltradosAtuais.map(function (cliente) {
+      const dadosCompletos = montarObjetoCliente(cliente);
+      const dadosFiltrados = {};
+
+      colunasSelecionadas.forEach(function (coluna) {
+        dadosFiltrados[mapaColunas[coluna]] = dadosCompletos[coluna];
+      });
+
+      return dadosFiltrados;
+    });
+  }
+
+  function baixarArquivo(nomeArquivo, conteudo, tipo) {
+    const blob = new Blob([conteudo], { type: tipo });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = nomeArquivo;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+  function exportarJson() {
+    const dados = obterDadosExportacao();
+
+    baixarArquivo(
+      "clientes.json",
+      JSON.stringify(dados, null, 2),
+      "application/json;charset=utf-8"
+    );
+  }
+
+  function exportarCsv() {
+    const dados = obterDadosExportacao();
+
+    if (dados.length === 0) {
+      baixarArquivo(
+        "clientes.csv",
+        "Nenhum dado encontrado.",
+        "text/csv;charset=utf-8"
+      );
+      return;
+    }
+
+    const colunas = Object.keys(dados[0]);
+
+    const linhas = dados.map(function (linha) {
+      return colunas
+        .map(function (coluna) {
+          return '"' + String(linha[coluna] || "").replace(/"/g, '""') + '"';
+        })
+        .join(";");
+    });
+
+    baixarArquivo(
+      "clientes.csv",
+      colunas.join(";") + "\n" + linhas.join("\n"),
+      "text/csv;charset=utf-8"
+    );
+  }
+
+  function exportarExcel() {
+    exportarCsv();
+  }
+
+  campoFiltro.addEventListener("input", aplicarPesquisa);
+
+  if (btnAplicarFiltro) {
+    btnAplicarFiltro.addEventListener("click", aplicarFiltroColunas);
+  }
+
+  if (btnExportarJson) {
+    btnExportarJson.addEventListener("click", exportarJson);
+  }
+
+  if (btnExportarCsv) {
+    btnExportarCsv.addEventListener("click", exportarCsv);
+  }
+
+  if (btnExportarExcel) {
+    btnExportarExcel.addEventListener("click", exportarExcel);
+  }
+
+  carregarClientes();
+});

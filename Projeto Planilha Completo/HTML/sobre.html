@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../CSS/dashboard.css">
   <link rel="stylesheet" href="../CSS/clientes.css">
 
+  <!-- Fonte -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -16,6 +17,7 @@
     rel="stylesheet"
   >
 
+  <!-- Ícones -->
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
@@ -78,9 +80,9 @@
     }
 
     @media (max-width: 860px) {
+
       .sobre-container {
         margin-left: 0;
-        min-height: auto;
         padding: 24px 16px;
       }
 
@@ -95,69 +97,87 @@
       .info {
         font-size: 16px;
       }
+
     }
   </style>
+
 </head>
+
 <body>
 
-  <div class="opcoes">
-    <h2>OPÇÕES</h2>
+<!-- MENU LATERAL -->
 
-    <a class="nao-ativo" href="dashboard.html">
-      <i class="fa-solid fa-chart-column"></i>
-      Dashboard
-    </a>
+<div class="opcoes">
 
-    <a class="nao-ativo" href="clientes.html">
-      <i class="fa-solid fa-users"></i>
-      Dados dos Clientes
-    </a>
+  <h2>OPÇÕES</h2>
 
-    <a class="nao-ativo" href="pagamentos.html">
-      <i class="fa-solid fa-credit-card"></i>
-      Pagamentos
-    </a>
+  <a class="nao-ativo" href="dashboard.html">
+    <i class="fa-solid fa-chart-column"></i>
+    Dashboard
+  </a>
 
-    <a class="nao-ativo" href="importacao.html">
-      <i class="fa-solid fa-file-export"></i>
-      Exportação
-    </a>
+  <a class="nao-ativo" href="clientes.html">
+    <i class="fa-solid fa-users"></i>
+    Dados dos Clientes
+  </a>
 
-    <a class="menu-ativo" href="sobre.html">
-      <i class="fa-solid fa-circle-info"></i>
-      Sobre
-    </a>
-  </div>
+  <a class="nao-ativo" href="pagamentos.html">
+    <i class="fa-solid fa-credit-card"></i>
+    Pagamentos
+  </a>
 
-  <div class="sobre-container">
-    <div class="card-sobre">
-      <div class="icone-sistema">
-        <i class="fa-solid fa-desktop"></i>
-      </div>
+  <a class="nao-ativo" href="importacao.html">
+    <i class="fa-solid fa-file-export"></i>
+    Exportar
+  </a>
 
-      <h1 class="titulo-sistema">Sistema de Controle de Clientes e Vencimentos</h1>
+  <a class="menu-ativo" href="sobre.html">
+    <i class="fa-solid fa-circle-info"></i>
+    Sobre
+  </a>
 
-      <p class="info">
-        Sistema desktop offline para gerenciamento de clientes, pagamentos e vencimentos.
-      </p>
+</div>
 
-      <p class="info">
-        Empresa atendida: Medeiros e Moreira Benefícios
-      </p>
 
-      <p class="info">
-        Tecnologias utilizadas: HTML, CSS, JavaScript, Electron e SQLite
-      </p>
+<!-- CONTEÚDO -->
 
-      <p class="autores">
-        Desenvolvido por Samuel Luciano e Juliana Rocha
-      </p>
+<div class="sobre-container">
 
-      <p class="rodape">
-        Projeto acadêmico - ADS
-      </p>
+  <div class="card-sobre">
+
+    <div class="icone-sistema">
+      <i class="fa-solid fa-desktop"></i>
     </div>
+
+    <h1 class="titulo-sistema">
+      Sistema de Controle de Clientes e Vencimentos
+    </h1>
+
+    <p class="info">
+      Sistema desktop offline para gerenciamento de clientes,
+      pagamentos e vencimentos.
+    </p>
+
+    <p class="info">
+      Empresa atendida: Medeiros e Moreira Benefícios
+    </p>
+
+    <p class="info">
+      Tecnologias utilizadas:
+      HTML, CSS, JavaScript, Electron e SQLite
+    </p>
+
+    <p class="autores">
+      Desenvolvido por Samuel Luciano e Juliana Rocha
+    </p>
+
+    <p class="rodape">
+      Projeto acadêmico - ADS
+    </p>
+
   </div>
+
+</div>
 
 </body>
 </html>

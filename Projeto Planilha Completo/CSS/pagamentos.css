@@ -1,95 +1,86 @@
-body {
-    background-color: rgb(215, 248, 250);
-    margin: 0;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    align-items: center;
+/* ========================= */
+/* PAGAMENTOS                */
+/* Mantém a tabela no mesmo  */
+/* padrão visual de Clientes */
+/* e Dashboard               */
+/* ========================= */
+
+#tabela-pagamentos {
+  max-width: 900px;
+  margin: 35px auto 0 auto;
 }
 
-/* Mantém apenas ajustes específicos da tela de pagamentos,
-   sem sobrescrever a sidebar base do dashboard.css */
-
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    padding: 20px;
-    box-sizing: border-box;
+/* Centraliza os textos */
+#tabela-pagamentos th,
+#tabela-pagamentos td {
+  text-align: center;
 }
 
-.hidden {
-    display: none;
+/* Coluna Selecionar */
+#tabela-pagamentos th:nth-child(1),
+#tabela-pagamentos td:nth-child(1) {
+  width: 120px;
 }
 
-.modal-conteudo {
-    background: #ffffff;
-    width: 520px;
-    max-width: 92%;
-    max-height: 88vh;
-    overflow-y: auto;
-    padding: 24px;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    text-align: left;
-    box-sizing: border-box;
+/* Coluna Nome */
+#tabela-pagamentos th:nth-child(2),
+#tabela-pagamentos td:nth-child(2) {
+  width: 160px;
 }
 
-.modal-conteudo h2 {
-    text-align: center;
-    margin-bottom: 24px;
-    color: #34495e;
-    font-family: 'Montserrat', sans-serif;
+/* Coluna CPF */
+#tabela-pagamentos th:nth-child(3),
+#tabela-pagamentos td:nth-child(3) {
+  width: 150px;
 }
 
-.modal-conteudo label {
-    display: block;
-    margin-bottom: 8px;
-    margin-top: 12px;
-    color: #34495e;
-    font-weight: bold;
+/* Coluna Valor */
+#tabela-pagamentos th:nth-child(4),
+#tabela-pagamentos td:nth-child(4) {
+  width: 140px;
 }
 
-.modal-conteudo input,
-.modal-conteudo select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #c9d3dd;
-    border-radius: 10px;
-    box-sizing: border-box;
-    font-size: 15px;
+/* Coluna Vencimento */
+#tabela-pagamentos th:nth-child(5),
+#tabela-pagamentos td:nth-child(5) {
+  width: 140px;
 }
 
-.botoes-modal {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-    position: sticky;
-    bottom: 0;
-    background: #ffffff;
-    padding-top: 10px;
+/* Coluna Status */
+#tabela-pagamentos th:nth-child(6),
+#tabela-pagamentos td:nth-child(6) {
+  width: 130px;
 }
 
-.botoes-modal button {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    background: #34495e;
-    color: white;
-    cursor: pointer;
-    font-size: 16px;
+/* Evita que o texto quebre feio */
+#tabela-pagamentos td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.botoes-modal button:hover {
-    background: #81cafc;
-    color: #34495e;
+/* Mantém o checkbox centralizado */
+#tabela-pagamentos .checkbox-cliente {
+  margin: 0 auto;
+  display: block;
 }
 
-#tabela-body input[type="radio"] {
-    cursor: pointer;
-    transform: scale(1.1);
+#tabela-pagamentos {
+  width: 100%;
+  min-width: 900px;
+}
+
+#tabela-pagamentos th,
+#tabela-pagamentos td {
+  min-width: 130px;
+  text-align: center;
+}
+
+#tabela-pagamentos th:first-child,
+#tabela-pagamentos td:first-child {
+  min-width: 100px;
+}
+
+.conteudo {
+  overflow-x: auto;
 }

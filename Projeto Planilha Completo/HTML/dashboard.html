@@ -11,86 +11,80 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
   <div class="opcoes">
     <h2>OPÇÕES</h2>
 
     <a class="menu-ativo" href="dashboard.html">
-      <i class="fa-solid fa-chart-column"></i>
-      Dashboard
+      <i class="fa-solid fa-chart-column"></i> Dashboard
     </a>
 
     <a class="nao-ativo" href="clientes.html">
-      <i class="fa-solid fa-users"></i>
-      Dados dos Clientes
+      <i class="fa-solid fa-users"></i> Dados dos Clientes
     </a>
 
     <a class="nao-ativo" href="pagamentos.html">
-      <i class="fa-solid fa-credit-card"></i>
-      Pagamentos
+      <i class="fa-solid fa-credit-card"></i> Pagamentos
     </a>
 
     <a class="nao-ativo" href="importacao.html">
-      <i class="fa-solid fa-file-export"></i>
-      Exportação
+      <i class="fa-solid fa-folder-open"></i> Exportar
     </a>
 
     <a class="nao-ativo" href="sobre.html">
-      <i class="fa-solid fa-circle-info"></i>
-      Sobre
+      <i class="fa-solid fa-circle-info"></i> Sobre
     </a>
   </div>
 
   <div class="conteudo">
     <h2 class="titulo">DASHBOARD</h2>
 
-    <div class="cards-dashboard">
-      <div class="cards cards-principais">
-        <div class="card">
-          <p>Total de Clientes</p>
-          <p id="totalClientes" class="valor">0</p>
-        </div>
+    <div class="barra-acoes">
+      <div class="campo-pesquisa">
+        <input
+          id="campoFiltroDashboard"
+          type="text"
+          class="pesquisa"
+          placeholder="Pesquisar Cliente - nome/CPF"
+        >
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </div>
+    </div>
 
-        <div class="card">
-          <p>Clientes Ativos</p>
-          <p id="ativos" class="valor">0</p>
-        </div>
-
-        <div class="card">
-          <p>Adimplentes</p>
-          <p id="adimplentes" class="valor">0</p>
-        </div>
-
-        <div class="card">
-          <p>Clientes Inadimplentes</p>
-          <p id="inadimplentes" class="valor">0</p>
-        </div>
-
-        <div class="card">
-          <p>Clientes Inativos</p>
-          <p id="inativos" class="valor">0</p>
-        </div>
+    <div class="cards">
+      <div class="card">
+        <p>Total de Clientes</p>
+        <p id="totalClientes" class="valor">0</p>
       </div>
 
-      <div class="bloco-proximo-vencimento">
-        <div class="card card-destaque">
-          <p>Próximo Vencimento</p>
-          <p id="vencimento" class="valor">-</p>
-        </div>
+      <div class="card">
+        <p>Clientes Ativos</p>
+        <p id="ativos" class="valor">0</p>
+      </div>
 
-        <button class="btn btn-vencimento" id="btn-editar-vencimento" type="button">
-          <i class="fa-solid fa-pen"></i>
-          Editar próximo vencimento
-        </button>
+      <div class="card">
+        <p>Adimplentes</p>
+        <p id="adimplentes" class="valor">0</p>
+      </div>
+
+      <div class="card">
+        <p>Clientes Inadimplentes</p>
+        <p id="inadimplentes" class="valor">0</p>
+      </div>
+
+      <div class="card">
+        <p>Clientes Inativos</p>
+        <p id="inativos" class="valor">0</p>
       </div>
     </div>
 
     <table class="tabela-clientes">
       <thead>
         <tr>
-          <th>Selecionar</th>
           <th>Cliente</th>
           <th>CPF</th>
           <th>Vencimento</th>
@@ -99,22 +93,12 @@
         </tr>
       </thead>
 
-      <tbody id="tabela-body"></tbody>
+      <tbody id="tabela-body">
+        <tr>
+          <td colspan="5">Nenhum cliente cadastrado.</td>
+        </tr>
+      </tbody>
     </table>
-  </div>
-
-  <div id="modal-vencimento" class="modal hidden">
-    <div class="modal-conteudo">
-      <h2>Editar Próximo Vencimento</h2>
-
-      <label for="input-vencimento-dashboard">Data exibida no bloco:</label>
-      <input type="date" id="input-vencimento-dashboard">
-
-      <div class="botoes-modal">
-        <button id="btn-confirmar-vencimento" type="button">Confirmar</button>
-        <button id="btn-cancelar-vencimento" type="button">Cancelar</button>
-      </div>
-    </div>
   </div>
 
   <script src="ui-feedback.js"></script>

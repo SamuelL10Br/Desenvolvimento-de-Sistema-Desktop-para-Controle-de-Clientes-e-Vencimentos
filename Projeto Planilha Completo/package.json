@@ -1,9 +1,9 @@
 {
-  "name": "sistema-clientes-pex",
+  "name": "Medeiros-Moreira-Sistema-de-Clientes",
   "version": "1.0.0",
-  "description": "Sistema desktop para controle de clientes e vencimentos",
+  "description": "Sistema desktop em planilha para controle de clientes e vencimentos",
   "main": "main.js",
-  "author": "Samuel Luciano",
+  "author": "Samuel Luciano e Juliana Rocha",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -11,28 +11,31 @@
   },
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
-    "electron": "28.3.3",
+    "electron": "^28.3.3",
     "electron-builder": "^24.13.3"
   },
-  "build": {
-    "appId": "com.samuel.sistemaclientespex",
-    "productName": "Sistema Clientes PEX",
-    "files": [
-      "main.js",
-      "preload.js",
-      "HTML/**/*",
-      "CSS/**/*",
-      "Imagens/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+ "build": {
+  "appId": "com.medeiros.moreira",
+  "productName": "Medeiros e Moreira",
+  "files": [
+    "main.js",
+    "preload.js",
+    "HTML/**/*",
+    "CSS/**/*",
+    "Imagens/**/*",
+    "assets/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": "nsis",
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Medeiros e Moreira"
   }
+}
 }

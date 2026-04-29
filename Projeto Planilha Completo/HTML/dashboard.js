@@ -1,262 +1,265 @@
-document.addEventListener("DOMContentLoaded", async () => {
-  const btnEditarVencimento = document.getElementById("btn-editar-vencimento");
-  const btnConfirmarVencimento = document.getElementById("btn-confirmar-vencimento");
-  const btnCancelarVencimento = document.getElementById("btn-cancelar-vencimento");
-  const modal = document.getElementById("modal-vencimento");
-  const inputVencimentoDashboard = document.getElementById("input-vencimento-dashboard");
-  const campoCardVencimento = document.getElementById("vencimento");
+let clientesCacheDashboard = [];
 
-  function limparCPF(cpf) {
-    return String(cpf || "").replace(/\D/g, "").slice(0, 11);
+function limparCPF(cpf) {
+  return String(cpf || "").replace(/\D/g, "").slice(0, 11);
+}
+
+function formatarCPF(cpf) {
+  const n = limparCPF(cpf);
+
+  if (n.length !== 11) {
+    return n;
   }
 
-  function formatarCPF(cpf) {
-    const numeros = limparCPF(cpf);
+  return `${n.slice(0, 3)}.${n.slice(3, 6)}.${n.slice(6, 9)}-${n.slice(9, 11)}`;
+}
 
-    if (!numeros) return "";
+function normalizarTexto(valor) {
+  return String(valor || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
-    return numeros
-      .replace(/^(\d{3})(\d)/, "$1.$2")
-      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1-$2");
+function converterDataParaInput(data) {
+  if (!data) return "";
+
+  const texto = String(data).trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+    return texto;
   }
 
-  function normalizarTexto(valor) {
-    return String(valor || "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+    const partes = texto.split("/");
+    return `${partes[2]}-${partes[1]}-${partes[0]}`;
   }
 
-  function ordenarClientesPorNome(lista) {
-    return [...lista].sort((a, b) =>
-      String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR", {
-        sensitivity: "base"
-      })
-    );
+  return "";
+}
+
+function formatarData(data) {
+  const d = converterDataParaInput(data);
+
+  if (!d) return "-";
+
+  return `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
+}
+
+function criarDataLocal(data) {
+  const d = converterDataParaInput(data);
+
+  if (!d) return null;
+
+  const dataLocal = new Date(d + "T00:00:00");
+
+  if (Number.isNaN(dataLocal.getTime())) {
+    return null;
   }
 
-  function converterDataParaInput(data) {
-    if (!data) return "";
+  return dataLocal;
+}
 
-    const texto = String(data).trim();
+  function obterStatusAutomatico(cliente) {
+  const statusManual = String(cliente.statusPagamento || "").trim();
 
-    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-      return texto;
-    }
-
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
-      const [dia, mes, ano] = texto.split("/");
-      return `${ano}-${mes}-${dia}`;
-    }
-
-    return "";
+  if (statusManual === "Pago") {
+    return "Pago";
   }
 
-  function formatarDataParaExibicao(data) {
-    const dataConvertida = converterDataParaInput(data);
+  const vencimento = criarDataLocal(cliente.vencimento);
+  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
 
-    if (!dataConvertida) return "-";
-
-    const [ano, mes, dia] = dataConvertida.split("-");
-    return `${dia}/${mes}/${ano}`;
+  if (!vencimento) {
+    return "Pendente";
   }
 
-  function criarDataLocal(data) {
-    const dataConvertida = converterDataParaInput(data);
-
-    if (!dataConvertida) return null;
-
-    const dataLocal = new Date(`${dataConvertida}T00:00:00`);
-    return Number.isNaN(dataLocal.getTime()) ? null : dataLocal;
-  }
-
-  function obterStatusAutomatico(vencimento, ultimoPagamento = "") {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const dataVencimento = criarDataLocal(vencimento);
-    const dataPagamento = criarDataLocal(ultimoPagamento);
-
-    if (!dataVencimento) {
-      return "Pendente";
-    }
-
-    if (dataPagamento && dataPagamento.getTime() >= dataVencimento.getTime()) {
+  if (ultimoPagamento) {
+    if (ultimoPagamento.getTime() >= vencimento.getTime()) {
       return "Pago";
     }
 
-    if (hoje.getTime() > dataVencimento.getTime()) {
+    const diasEntrePagamentoEVencimento = Math.floor(
+      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+    );
+
+    if (diasEntrePagamentoEVencimento > 31) {
       return "Atrasado";
     }
 
     return "Pendente";
   }
 
-  function obterDiasResumo(cliente) {
-    const ativo = normalizarTexto(cliente.ativo);
-    if (ativo === "inativo") return "-";
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
 
-    const status = obterStatusAutomatico(cliente.vencimento, cliente.ultimoPagamento);
+  if (hoje.getTime() > vencimento.getTime()) {
+    return "Atrasado";
+  }
 
-    if (status === "Pago") {
-      return "Pago";
+  return "Pendente";
+}
+
+  function exibirDias(cliente) {
+  const status = obterStatusAutomatico(cliente);
+  const vencimento = criarDataLocal(cliente.vencimento);
+  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
+
+  if (status === "Pago") {
+    return "Pago";
+  }
+
+  if (!vencimento) {
+    return "-";
+  }
+
+  if (ultimoPagamento && ultimoPagamento.getTime() < vencimento.getTime()) {
+    const diasEntrePagamentoEVencimento = Math.floor(
+      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+    );
+
+    if (diasEntrePagamentoEVencimento > 31) {
+      return `${diasEntrePagamentoEVencimento} dias em atraso`;
     }
 
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const vencimento = criarDataLocal(cliente.vencimento);
-    if (!vencimento) return "-";
-
-    const diferenca = vencimento.getTime() - hoje.getTime();
-    const dias = Math.abs(Math.floor(diferenca / (1000 * 60 * 60 * 24)));
-
-    if (status === "Atrasado") {
-      return `${dias} em atraso`;
-    }
-
-    return `${dias} para vencer`;
+    return `${diasEntrePagamentoEVencimento} dias`;
   }
 
-  function abrirModal() {
-    document.body.classList.add("modal-aberto");
-    modal.classList.remove("hidden");
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  const diasPeloVencimento = Math.floor(
+    (vencimento.getTime() - hoje.getTime()) / 86400000
+  );
+
+  if (status === "Atrasado") {
+    return `${Math.abs(diasPeloVencimento)} dias em atraso`;
   }
 
-  function fecharModal() {
-    document.body.classList.remove("modal-aberto");
-    modal.classList.add("hidden");
-    inputVencimentoDashboard.value = "";
+  return `${diasPeloVencimento} dias`;
+}
+
+function ordenarClientesPorNome(clientes) {
+  return clientes.slice().sort(function (a, b) {
+    return String(a.nome || "").localeCompare(String(b.nome || ""), "pt-BR");
+  });
+}
+
+function atualizarCards(clientes) {
+  const total = clientes.length;
+
+  const ativos = clientes.filter(function (cliente) {
+    return normalizarTexto(cliente.ativo) === "ativo";
+  }).length;
+
+  const inativos = clientes.filter(function (cliente) {
+    return normalizarTexto(cliente.ativo) === "inativo";
+  }).length;
+
+  const adimplentes = clientes.filter(function (cliente) {
+    return obterStatusAutomatico(cliente) === "Pago";
+  }).length;
+
+  const inadimplentes = clientes.filter(function (cliente) {
+    const status = obterStatusAutomatico(cliente);
+    return status === "Pendente" || status === "Atrasado";
+  }).length;
+
+  document.getElementById("totalClientes").textContent = total;
+  document.getElementById("ativos").textContent = ativos;
+  document.getElementById("adimplentes").textContent = adimplentes;
+  document.getElementById("inadimplentes").textContent = inadimplentes;
+  document.getElementById("inativos").textContent = inativos;
+}
+
+function renderizarTabelaDashboard(clientes) {
+  const tabelaBody = document.getElementById("tabela-body");
+
+  tabelaBody.innerHTML = "";
+
+  if (clientes.length === 0) {
+    tabelaBody.innerHTML = `
+      <tr>
+        <td colspan="5">Nenhum cliente cadastrado.</td>
+      </tr>
+    `;
+    return;
   }
 
-  async function carregarValorDoBloco() {
-    try {
-      const valorSalvo = await obterProximoVencimentoDashboard();
+  clientes.forEach(function (cliente) {
+    const linha = document.createElement("tr");
 
-      campoCardVencimento.textContent = valorSalvo
-        ? formatarDataParaExibicao(valorSalvo)
-        : "-";
-    } catch (erro) {
-      console.error("Erro ao carregar o bloco de próximo vencimento:", erro);
-      campoCardVencimento.textContent = "-";
-    }
+    linha.innerHTML = `
+      <td>${cliente.nome || ""}</td>
+      <td>${formatarCPF(cliente.cpf || "")}</td>
+      <td>${formatarData(cliente.vencimento)}</td>
+      <td>${obterStatusAutomatico(cliente)}</td>
+      <td>${exibirDias(cliente)}</td>
+    `;
+
+    tabelaBody.appendChild(linha);
+  });
+}
+
+function clienteCombinaComPesquisaDashboard(cliente, termo) {
+  const termoTexto = normalizarTexto(termo);
+  const termoCpf = limparCPF(termo);
+
+  const nome = normalizarTexto(cliente.nome);
+  const cpf = limparCPF(cliente.cpf);
+
+  return (
+    nome.includes(termoTexto) ||
+    (termoCpf.length > 0 && cpf.includes(termoCpf))
+  );
+}
+
+function aplicarPesquisaDashboard() {
+  const campo = document.getElementById("campoFiltroDashboard");
+
+  if (!campo) {
+    atualizarCards(clientesCacheDashboard);
+    renderizarTabelaDashboard(clientesCacheDashboard);
+    return;
   }
 
-  async function abrirModalEdicaoVencimento() {
-    try {
-      const valorSalvo = await obterProximoVencimentoDashboard();
-      inputVencimentoDashboard.value = converterDataParaInput(valorSalvo);
-      abrirModal();
-    } catch (erro) {
-      console.error("Erro ao abrir modal do bloco:", erro);
-      window.uiFeedback?.error?.("Erro ao abrir edição do bloco.");
-    }
+  const termo = campo.value.trim();
+
+  if (!termo) {
+    atualizarCards(clientesCacheDashboard);
+    renderizarTabelaDashboard(clientesCacheDashboard);
+    return;
   }
 
-  async function salvarEdicaoDoBloco() {
-    try {
-      const novaData = inputVencimentoDashboard.value;
+  const filtrados = clientesCacheDashboard.filter(function (cliente) {
+    return clienteCombinaComPesquisaDashboard(cliente, termo);
+  });
 
-      if (!novaData) {
-        window.uiFeedback?.error?.("Informe uma data válida.");
-        return;
-      }
+  atualizarCards(filtrados);
+  renderizarTabelaDashboard(filtrados);
+}
 
-      await salvarProximoVencimentoDashboard(novaData);
-      await carregarValorDoBloco();
-      fecharModal();
+async function renderizarDashboard() {
+  try {
+    const clientes = await obterClientes();
 
-      window.uiFeedback?.success?.("Próximo vencimento atualizado com sucesso.");
-    } catch (erro) {
-      console.error("Erro ao salvar o bloco de próximo vencimento:", erro);
-      window.uiFeedback?.error?.("Erro ao salvar o próximo vencimento.");
-    }
+    clientesCacheDashboard = ordenarClientesPorNome(
+      Array.isArray(clientes) ? clientes : []
+    );
+
+    aplicarPesquisaDashboard();
+  } catch (erro) {
+    console.error("Erro ao carregar dashboard:", erro);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const campoFiltroDashboard = document.getElementById("campoFiltroDashboard");
+
+  if (campoFiltroDashboard) {
+    campoFiltroDashboard.addEventListener("input", aplicarPesquisaDashboard);
   }
 
-  function atualizarCards(clientes) {
-    const total = clientes.length;
-
-    const ativos = clientes.filter(
-      (cliente) => normalizarTexto(cliente.ativo) === "ativo"
-    ).length;
-
-    const inativos = clientes.filter(
-      (cliente) => normalizarTexto(cliente.ativo) === "inativo"
-    ).length;
-
-    const adimplentes = clientes.filter((cliente) => {
-      return obterStatusAutomatico(cliente.vencimento, cliente.ultimoPagamento) === "Pago";
-    }).length;
-
-    const inadimplentes = clientes.filter((cliente) => {
-      const status = obterStatusAutomatico(cliente.vencimento, cliente.ultimoPagamento);
-      return status === "Pendente" || status === "Atrasado";
-    }).length;
-
-    document.getElementById("totalClientes").textContent = total;
-    document.getElementById("ativos").textContent = ativos;
-    document.getElementById("inativos").textContent = inativos;
-    document.getElementById("adimplentes").textContent = adimplentes;
-    document.getElementById("inadimplentes").textContent = inadimplentes;
-  }
-
-  function renderizarTabelaDashboard(clientes) {
-    const tabelaBody = document.getElementById("tabela-body");
-    if (!tabelaBody) return;
-
-    tabelaBody.innerHTML = "";
-
-    if (!clientes.length) {
-      tabelaBody.innerHTML = `
-        <tr>
-          <td colspan="6">Nenhum cliente cadastrado.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    clientes.forEach((cliente) => {
-      const tr = document.createElement("tr");
-      const statusCalculado = obterStatusAutomatico(cliente.vencimento, cliente.ultimoPagamento);
-
-      tr.innerHTML = `
-        <td>
-          <input
-            type="radio"
-            name="clienteDashboardSelecionado"
-            value="${limparCPF(cliente.cpf || "")}"
-          >
-        </td>
-        <td>${cliente.nome || ""}</td>
-        <td>${formatarCPF(cliente.cpf || "")}</td>
-        <td>${formatarDataParaExibicao(cliente.vencimento)}</td>
-        <td>${statusCalculado}</td>
-        <td>${obterDiasResumo(cliente)}</td>
-      `;
-
-      tabelaBody.appendChild(tr);
-    });
-  }
-
-  async function renderizarDashboard() {
-    try {
-      const clientes = await obterClientes();
-      const clientesOrdenados = ordenarClientesPorNome(clientes);
-
-      atualizarCards(clientesOrdenados);
-      renderizarTabelaDashboard(clientesOrdenados);
-      await carregarValorDoBloco();
-    } catch (erro) {
-      console.error("Erro ao renderizar dashboard:", erro);
-      window.uiFeedback?.error?.("Erro ao carregar dashboard.");
-    }
-  }
-
-  btnEditarVencimento?.addEventListener("click", abrirModalEdicaoVencimento);
-  btnConfirmarVencimento?.addEventListener("click", salvarEdicaoDoBloco);
-  btnCancelarVencimento?.addEventListener("click", fecharModal);
-
-  await renderizarDashboard();
+  renderizarDashboard();
 });

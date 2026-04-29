@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const fsp = require("fs/promises");
+const https = require("https");
 
 let janelaPrincipal = null;
 
@@ -9,6 +10,9 @@ const PASTA_DADOS = path.join(app.getPath("userData"), "dados");
 const ARQUIVO_CLIENTES = path.join(PASTA_DADOS, "clientes.json");
 const ARQUIVO_CONFIG = path.join(PASTA_DADOS, "config.json");
 
+const URL_LICENCA =
+  "https://licenca-api-eta.vercel.app/api/validar";
+  
 let filaDeSalvamento = Promise.resolve();
 
 async function garantirEstrutura() {
@@ -30,26 +34,29 @@ async function lerJsonSeguro(caminho, fallback) {
     const conteudo = await fsp.readFile(caminho, "utf-8");
     return JSON.parse(conteudo);
   } catch (erro) {
-    console.error(`Erro ao ler ${caminho}:`, erro);
+    console.error("Erro ao ler JSON:", erro);
     return fallback;
   }
 }
 
 async function escreverJsonSeguro(caminho, dados) {
-  const conteudo = JSON.stringify(dados, null, 2);
-  await fsp.writeFile(caminho, conteudo, "utf-8");
+  await fsp.writeFile(caminho, JSON.stringify(dados, null, 2), "utf-8");
   return true;
 }
 
 async function lerClientesDoArquivo() {
   await garantirEstrutura();
+
   const dados = await lerJsonSeguro(ARQUIVO_CLIENTES, []);
+
   return Array.isArray(dados) ? dados : [];
 }
 
 async function salvarClientesNoArquivo(clientes) {
   await garantirEstrutura();
+
   const dadosValidos = Array.isArray(clientes) ? clientes : [];
+
   return escreverJsonSeguro(ARQUIVO_CLIENTES, dadosValidos);
 }
 
@@ -57,7 +64,7 @@ function salvarClientesEmFila(clientes) {
   filaDeSalvamento = filaDeSalvamento
     .then(() => salvarClientesNoArquivo(clientes))
     .catch((erro) => {
-      console.error("Erro na fila de salvamento:", erro);
+      console.error("Erro ao salvar clientes:", erro);
       throw erro;
     });
 
@@ -66,14 +73,80 @@ function salvarClientesEmFila(clientes) {
 
 async function lerConfig() {
   await garantirEstrutura();
+
   const dados = await lerJsonSeguro(ARQUIVO_CONFIG, {});
+
   return dados && typeof dados === "object" ? dados : {};
 }
 
 async function salvarConfig(config) {
   await garantirEstrutura();
-  const dados = config && typeof config === "object" ? config : {};
-  return escreverJsonSeguro(ARQUIVO_CONFIG, dados);
+
+  const dadosValidos = config && typeof config === "object" ? config : {};
+
+  return escreverJsonSeguro(ARQUIVO_CONFIG, dadosValidos);
+}
+
+function validarLicencaOnline(chave) {
+  return new Promise((resolve) => {
+    const url = new URL(URL_LICENCA);
+    url.searchParams.set("licenca", chave);
+
+    const req = https.get(
+      url,
+      {
+        headers: {
+          Accept: "application/json",
+          "Accept-Encoding": "identity",
+          "User-Agent": "Sistema-Clientes-PEX"
+        }
+      },
+      (res) => {
+        let dados = "";
+
+        res.setEncoding("utf8");
+
+        res.on("data", (chunk) => {
+          dados += chunk;
+        });
+
+        res.on("end", () => {
+          console.log("STATUS LICENÇA:", res.statusCode);
+          console.log("RESPOSTA LICENÇA:", dados);
+
+          try {
+            const json = JSON.parse(dados);
+            resolve(json);
+          } catch (erro) {
+            console.error("Erro ao converter resposta da licença:", erro);
+
+            resolve({
+              valida: false,
+              erro: "Resposta inválida do servidor: " + dados.slice(0, 80)
+            });
+          }
+        });
+      }
+    );
+
+    req.on("error", (erro) => {
+      console.error("Erro HTTPS licença:", erro);
+
+      resolve({
+        valida: false,
+        erro: "Erro de conexão com o servidor de licença."
+      });
+    });
+
+    req.setTimeout(10000, () => {
+      req.destroy();
+
+      resolve({
+        valida: false,
+        erro: "Tempo esgotado ao validar licença."
+      });
+    });
+  });
 }
 
 function criarJanela() {
@@ -90,9 +163,7 @@ function criarJanela() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
-      devTools: true,
-      backgroundThrottling: false,
-      spellcheck: false
+      devTools: true
     }
   });
 
@@ -133,6 +204,10 @@ app.whenReady().then(async () => {
     config[chave] = valor;
     await salvarConfig(config);
     return true;
+  });
+
+  ipcMain.handle("licenca:validar", async (_event, chave) => {
+    return validarLicencaOnline(chave);
   });
 
   criarJanela();

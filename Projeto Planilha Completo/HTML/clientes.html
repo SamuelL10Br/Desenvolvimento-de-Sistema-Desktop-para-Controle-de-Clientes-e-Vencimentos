@@ -11,35 +11,32 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body>
   <div class="opcoes">
     <h2>OPÇÕES</h2>
 
     <a class="nao-ativo" href="dashboard.html">
-      <i class="fa-solid fa-chart-column"></i>
-      Dashboard
+      <i class="fa-solid fa-chart-column"></i> Dashboard
     </a>
 
     <a class="menu-ativo" href="clientes.html">
-      <i class="fa-solid fa-users"></i>
-      Dados dos Clientes
+      <i class="fa-solid fa-users"></i> Dados dos Clientes
     </a>
 
     <a class="nao-ativo" href="pagamentos.html">
-      <i class="fa-solid fa-credit-card"></i>
-      Pagamentos
+      <i class="fa-solid fa-credit-card"></i> Pagamentos
     </a>
 
     <a class="nao-ativo" href="importacao.html">
-      <i class="fa-solid fa-file-export"></i>
-      Exportação
+      <i class="fa-solid fa-folder-open"></i> Exportar
     </a>
 
     <a class="nao-ativo" href="sobre.html">
-      <i class="fa-solid fa-circle-info"></i>
-      Sobre
+      <i class="fa-solid fa-circle-info"></i> Sobre
     </a>
   </div>
 
@@ -47,26 +44,20 @@
     <h2 class="titulo">DADOS DOS CLIENTES</h2>
 
     <div class="barra-acoes">
-      <button class="btn" id="btn-novo" type="button">
+      <button id="btn-novo" class="btn" type="button">
         <i class="fa-solid fa-user-plus"></i> Novo Cliente
       </button>
 
       <div class="campo-pesquisa">
-        <input
-          type="text"
-          class="pesquisa"
-          id="pesquisa"
-          placeholder="Pesquisar cliente - nome/CPF"
-          autocomplete="off"
-        >
+        <input id="pesquisa" type="text" class="pesquisa" placeholder="Pesquisar Cliente - nome/CPF">
         <i class="fa-solid fa-magnifying-glass"></i>
       </div>
 
-      <button class="btn" id="btn-editar" type="button">
+      <button id="btn-editar" class="btn" type="button">
         <i class="fa-solid fa-pen"></i> Editar
       </button>
 
-      <button class="btn" id="btn-excluir" type="button">
+      <button id="btn-excluir" class="btn" type="button">
         <i class="fa-solid fa-trash"></i> Excluir
       </button>
     </div>
@@ -74,68 +65,94 @@
     <table class="tabela-clientes">
       <thead>
         <tr>
-          <th>Selecionar</th>
+          <th class="coluna-selecao">Selecionar</th>
           <th>Nome</th>
           <th>CPF</th>
-          <th>Telefone</th>
+          <th>Telefone/Whatsapp</th>
           <th>Endereço</th>
           <th>E-mail</th>
-          <th>Valor</th>
-          <th>Vencimento</th>
-          <th>Status</th>
-          <th>Ativo/Inativo</th>
-          <th>Último Pagamento</th>
         </tr>
       </thead>
-      <tbody id="tabela-body"></tbody>
+
+      <tbody id="tabela-body">
+        <tr>
+          <td colspan="6" class="mensagem-vazia">Nenhum cliente cadastrado.</td>
+        </tr>
+      </tbody>
     </table>
   </div>
 
   <div id="modal-cliente" class="modal hidden">
-    <div class="modal-conteudo">
-      <h2 id="modal-titulo">Novo Cliente</h2>
+    <div class="modal-caixa">
+      <h3 id="modal-titulo">Novo Cliente</h3>
 
-      <label for="input-nome">Nome:</label>
-      <input type="text" id="input-nome" autocomplete="off">
+      <div class="form-grid">
+        <div class="campo-form full">
+          <label for="input-nome">Nome</label>
+          <input id="input-nome" type="text">
+        </div>
 
-      <label for="input-cpf">CPF:</label>
-      <input type="text" id="input-cpf" maxlength="14" placeholder="000.000.000-00" autocomplete="off">
+        <div class="campo-form">
+          <label for="input-cpf">CPF</label>
+          <input id="input-cpf" type="text" maxlength="14">
+        </div>
 
-      <label for="input-telefone">Telefone/Whatsapp:</label>
-      <input type="text" id="input-telefone" maxlength="15" placeholder="(00) 00000-0000" autocomplete="off">
+        <div class="campo-form">
+          <label for="input-telefone">Telefone/Whatsapp</label>
+          <input id="input-telefone" type="text" maxlength="15">
+        </div>
 
-      <label for="input-endereco">Endereço:</label>
-      <input type="text" id="input-endereco" autocomplete="off">
+        <div class="campo-form full">
+          <label for="input-endereco">Endereço</label>
+          <input id="input-endereco" type="text">
+        </div>
 
-      <label for="input-email">E-mail:</label>
-      <input type="email" id="input-email" autocomplete="off">
+        <div class="campo-form full">
+          <label for="input-email">E-mail</label>
+          <input id="input-email" type="email">
+        </div>
 
-      <label for="input-valor">Valor:</label>
-      <input type="text" id="input-valor" inputmode="decimal" placeholder="0,00" autocomplete="off">
+        <div class="campo-form">
+          <label for="input-valor">Valor</label>
+          <input id="input-valor" type="text" placeholder="Ex: 100,00">
+        </div>
 
-      <label for="input-vencimento">Vencimento:</label>
-      <input type="date" id="input-vencimento">
+        <div class="campo-form">
+          <label for="input-vencimento">Vencimento</label>
+          <input id="input-vencimento" type="date">
+        </div>
 
-      <label for="input-status-pagamento">Status:</label>
-      <select id="input-status-pagamento">
-        <option value="Pendente">Pendente</option>
-        <option value="Pago">Pago</option>
-        <option value="Atrasado">Atrasado</option>
-        <option value="Em dia">Em dia</option>
-      </select>
+        <div class="campo-form">
+          <label for="input-status-pagamento">Status</label>
+          <select id="input-status-pagamento">
+            <option value="Pendente">Pendente</option>
+            <option value="Pago">Pago</option>
+            <option value="Atrasado">Atrasado</option>
+          </select>
+        </div>
 
-      <label for="input-ativo">Ativo/Inativo:</label>
-      <select id="input-ativo">
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select>
+        <div class="campo-form">
+          <label for="input-ativo">Situação</label>
+          <select id="input-ativo">
+            <option value="Ativo">Ativo</option>
+            <option value="Inativo">Inativo</option>
+          </select>
+        </div>
 
-      <label for="input-ultimo-pagamento">Último Pagamento:</label>
-      <input type="date" id="input-ultimo-pagamento">
+        <div class="campo-form full">
+          <label for="input-ultimo-pagamento">Último Pagamento</label>
+          <input id="input-ultimo-pagamento" type="date">
+        </div>
+      </div>
 
-      <div class="botoes-modal">
-        <button id="btn-confirmar" type="button">Confirmar</button>
-        <button id="btn-cancelar" type="button">Cancelar</button>
+      <div class="modal-acoes">
+        <button id="btn-confirmar" class="btn" type="button">
+          <i class="fa-solid fa-check"></i> Salvar
+        </button>
+
+        <button id="btn-cancelar" class="btn" type="button">
+          <i class="fa-solid fa-xmark"></i> Cancelar
+        </button>
       </div>
     </div>
   </div>
