@@ -1,8 +1,16 @@
+/* ========================= */
+/* CONTAINERS EXPORTAR/FILTRO */
+/* ========================= */
+
 .exportar-container,
 .filtro-container {
   position: relative;
   display: inline-block;
 }
+
+/* ========================= */
+/* BOXES (MENUS)             */
+/* ========================= */
 
 .exportar-box,
 .filtro-box {
@@ -23,51 +31,68 @@
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
+/* Mostrar no hover */
 .exportar-container:hover .exportar-box,
 .filtro-container:hover .filtro-box {
   display: flex;
 }
 
+/* Botões internos */
 .exportar-box .btn,
 .filtro-box .btn {
   width: 100%;
 }
 
+/* Labels filtro */
 .filtro-box label {
   cursor: pointer;
   font-size: 14px;
 }
 
+/* Checkbox estilo */
 .filtro-box input[type="checkbox"] {
   margin-right: 6px;
   accent-color: #34495e;
 }
 
+/* Classe para esconder temporariamente */
 .filtro-box.filtro-fechado-temporario {
   display: none !important;
 }
+
+/* ========================= */
+/* CONTROLE DE COLUNAS       */
+/* ========================= */
 
 .coluna-oculta {
   display: none !important;
 }
 
-/* TABELA EXPORTAR COMPACTA */
+/* ========================= */
+/* SCROLL CONTAINER          */
+/* ========================= */
+
 .tabela-scroll-importacao {
-  width: 980px;
-  max-width: 86%;
+  width: 1000px;
+  max-width: 90%;
   margin: 35px auto 0 auto;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 6px;
 }
 
+/* ========================= */
+/* TABELA                    */
+/* ========================= */
+
 .tabela-importacao {
-  width: 980px !important;
+  width: 1100px !important;
   max-width: none !important;
   margin: 0 !important;
   table-layout: fixed;
 }
 
+/* Cabeçalho e células */
 .tabela-importacao th,
 .tabela-importacao td {
   font-size: 12px !important;
@@ -78,35 +103,39 @@
   text-overflow: ellipsis;
 }
 
-/* Larguras compactas */
+/* ========================= */
+/* LARGURAS DAS COLUNAS      */
+/* (12 COLUNAS AGORA)        */
+/* ========================= */
+
 .tabela-importacao th:nth-child(1),
 .tabela-importacao td:nth-child(1) {
-  width: 90px;
+  width: 120px;
 }
 
 .tabela-importacao th:nth-child(2),
 .tabela-importacao td:nth-child(2) {
-  width: 95px;
+  width: 110px;
 }
 
 .tabela-importacao th:nth-child(3),
 .tabela-importacao td:nth-child(3) {
-  width: 85px;
+  width: 90px;
 }
 
 .tabela-importacao th:nth-child(4),
 .tabela-importacao td:nth-child(4) {
-  width: 95px;
+  width: 90px; /* INÍCIO */
 }
 
 .tabela-importacao th:nth-child(5),
 .tabela-importacao td:nth-child(5) {
-  width: 80px;
+  width: 90px;
 }
 
 .tabela-importacao th:nth-child(6),
 .tabela-importacao td:nth-child(6) {
-  width: 90px;
+  width: 100px;
 }
 
 .tabela-importacao th:nth-child(7),
@@ -116,25 +145,42 @@
 
 .tabela-importacao th:nth-child(8),
 .tabela-importacao td:nth-child(8) {
-  width: 95px;
+  width: 110px;
 }
 
 .tabela-importacao th:nth-child(9),
 .tabela-importacao td:nth-child(9) {
-  width: 115px;
+  width: 120px;
 }
 
 .tabela-importacao th:nth-child(10),
 .tabela-importacao td:nth-child(10) {
-  width: 95px;
+  width: 110px;
 }
 
 .tabela-importacao th:nth-child(11),
 .tabela-importacao td:nth-child(11) {
-  width: 90px;
+  width: 110px;
 }
 
-/* SCROLL */
+.tabela-importacao th:nth-child(12),
+.tabela-importacao td:nth-child(12) {
+  width: 130px;
+}
+
+/* ========================= */
+/* MELHORIAS VISUAIS         */
+/* ========================= */
+
+#tabelaExportacao {
+  max-height: 420px;
+  overflow: auto;
+}
+
+/* ========================= */
+/* SCROLL PERSONALIZADO      */
+/* ========================= */
+
 .tabela-scroll-importacao::-webkit-scrollbar {
   height: 8px;
 }

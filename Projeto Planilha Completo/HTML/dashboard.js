@@ -47,6 +47,22 @@ function formatarData(data) {
   return `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
 }
 
+function formatarInicio(inicio) {
+  if (!inicio) return "-";
+
+  const texto = String(inicio).trim();
+
+  if (/^\d{4}-\d{2}$/.test(texto)) {
+    return `${texto.slice(5, 7)}/${texto.slice(0, 4)}`;
+  }
+
+  if (/^\d{2}\/\d{4}$/.test(texto)) {
+    return texto;
+  }
+
+  return "-";
+}
+
 function criarDataLocal(data) {
   const d = converterDataParaInput(data);
 
@@ -61,7 +77,7 @@ function criarDataLocal(data) {
   return dataLocal;
 }
 
-  function obterStatusAutomatico(cliente) {
+function obterStatusAutomatico(cliente) {
   const statusManual = String(cliente.statusPagamento || "").trim();
 
   if (statusManual === "Pago") {
@@ -101,7 +117,7 @@ function criarDataLocal(data) {
   return "Pendente";
 }
 
-  function exibirDias(cliente) {
+function exibirDias(cliente) {
   const status = obterStatusAutomatico(cliente);
   const vencimento = criarDataLocal(cliente.vencimento);
   const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
@@ -181,7 +197,7 @@ function renderizarTabelaDashboard(clientes) {
   if (clientes.length === 0) {
     tabelaBody.innerHTML = `
       <tr>
-        <td colspan="5">Nenhum cliente cadastrado.</td>
+        <td colspan="6">Nenhum cliente cadastrado.</td>
       </tr>
     `;
     return;
@@ -193,6 +209,7 @@ function renderizarTabelaDashboard(clientes) {
     linha.innerHTML = `
       <td>${cliente.nome || ""}</td>
       <td>${formatarCPF(cliente.cpf || "")}</td>
+      <td>${formatarInicio(cliente.inicio)}</td>
       <td>${formatarData(cliente.vencimento)}</td>
       <td>${obterStatusAutomatico(cliente)}</td>
       <td>${exibirDias(cliente)}</td>
@@ -208,9 +225,11 @@ function clienteCombinaComPesquisaDashboard(cliente, termo) {
 
   const nome = normalizarTexto(cliente.nome);
   const cpf = limparCPF(cliente.cpf);
+  const inicio = normalizarTexto(formatarInicio(cliente.inicio));
 
   return (
     nome.includes(termoTexto) ||
+    inicio.includes(termoTexto) ||
     (termoCpf.length > 0 && cpf.includes(termoCpf))
   );
 }

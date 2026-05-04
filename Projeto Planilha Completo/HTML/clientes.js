@@ -2,105 +2,22 @@ let modoEdicao = false;
 let cpfOriginal = "";
 let clientesCache = [];
 
-function garantirToastContainer() {
-  let container = document.getElementById("toast-container");
-
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "toast-container";
-    document.body.appendChild(container);
-  }
-
-  return container;
-}
-
-function mostrarToast(mensagem, tipo) {
-  const container = garantirToastContainer();
-  const toast = document.createElement("div");
-
-  toast.className = "toast toast-" + tipo;
-  toast.textContent = mensagem;
-
-  container.appendChild(toast);
-
-  setTimeout(function () {
-    toast.classList.add("toast-show");
-  }, 20);
-
-  setTimeout(function () {
-    toast.classList.remove("toast-show");
-
-    setTimeout(function () {
-      toast.remove();
-    }, 250);
-  }, 2600);
-}
-
 function mostrarErro(mensagem) {
-  mostrarToast(mensagem, "error");
+  if (window.uiFeedback?.error) window.uiFeedback.error(mensagem);
+  else alert(mensagem);
 }
 
 function mostrarSucesso(mensagem) {
-  mostrarToast(mensagem, "success");
+  if (window.uiFeedback?.success) window.uiFeedback.success(mensagem);
+  else alert(mensagem);
 }
 
-function confirmarComDesign(mensagem) {
-  return new Promise(function (resolve) {
-    let overlay = document.getElementById("confirm-overlay");
+async function confirmarComDesign(mensagem) {
+  if (window.uiFeedback?.confirm) {
+    return await window.uiFeedback.confirm(mensagem);
+  }
 
-    if (!overlay) {
-      overlay = document.createElement("div");
-      overlay.id = "confirm-overlay";
-      overlay.innerHTML = `
-        <div class="confirm-box">
-          <h3>Confirmação</h3>
-          <p id="confirm-message"></p>
-          <div class="confirm-actions">
-            <button id="confirm-no" type="button">Cancelar</button>
-            <button id="confirm-yes" type="button">Confirmar</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-    }
-
-    const mensagemElemento = overlay.querySelector("#confirm-message");
-    const btnCancelar = overlay.querySelector("#confirm-no");
-    const btnConfirmar = overlay.querySelector("#confirm-yes");
-
-    mensagemElemento.textContent = mensagem;
-    overlay.classList.add("confirm-open");
-    document.body.classList.add("modal-aberto");
-
-    function fechar(resultado) {
-      overlay.classList.remove("confirm-open");
-      document.body.classList.remove("modal-aberto");
-
-      btnCancelar.removeEventListener("click", cancelar);
-      btnConfirmar.removeEventListener("click", confirmar);
-      overlay.removeEventListener("click", clicarFora);
-
-      resolve(resultado);
-    }
-
-    function cancelar() {
-      fechar(false);
-    }
-
-    function confirmar() {
-      fechar(true);
-    }
-
-    function clicarFora(evento) {
-      if (evento.target === overlay) {
-        fechar(false);
-      }
-    }
-
-    btnCancelar.addEventListener("click", cancelar);
-    btnConfirmar.addEventListener("click", confirmar);
-    overlay.addEventListener("click", clicarFora);
-  });
+  return confirm(mensagem);
 }
 
 function limparCPF(cpf) {
@@ -114,9 +31,7 @@ function limparTelefone(telefone) {
 function formatarCPF(cpf) {
   const numeros = limparCPF(cpf);
 
-  if (numeros.length !== 11) {
-    return numeros;
-  }
+  if (numeros.length !== 11) return numeros;
 
   return (
     numeros.slice(0, 3) +
@@ -143,6 +58,18 @@ function formatarTelefone(telefone) {
   return numeros;
 }
 
+function formatarInicio(inicio) {
+  if (!inicio) return "-";
+
+  const texto = String(inicio).trim();
+
+  if (/^\d{4}-\d{2}$/.test(texto)) {
+    return texto.slice(5, 7) + "/" + texto.slice(0, 4);
+  }
+
+  return texto;
+}
+
 function normalizarTexto(valor) {
   return String(valor || "")
     .trim()
@@ -158,12 +85,19 @@ function converterValorParaNumero(valor) {
     .replace(",", ".")
     .trim();
 
-  if (!texto) {
-    return 0;
-  }
+  if (!texto) return 0;
 
   const numero = Number(texto);
   return Number.isNaN(numero) ? null : numero;
+}
+
+function escaparHtml(valor) {
+  return String(valor || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function obterSelecionados() {
@@ -181,6 +115,7 @@ function limparFormulario() {
   document.getElementById("input-endereco").value = "";
   document.getElementById("input-email").value = "";
   document.getElementById("input-valor").value = "";
+  document.getElementById("input-inicio").value = "";
   document.getElementById("input-vencimento").value = "";
   document.getElementById("input-status-pagamento").value = "Pendente";
   document.getElementById("input-ativo").value = "Ativo";
@@ -231,6 +166,7 @@ function abrirModalEdicao() {
   document.getElementById("input-endereco").value = cliente.endereco || "";
   document.getElementById("input-email").value = cliente.email || "";
   document.getElementById("input-valor").value = cliente.valor || "";
+  document.getElementById("input-inicio").value = cliente.inicio || "";
   document.getElementById("input-vencimento").value = cliente.vencimento || "";
   document.getElementById("input-status-pagamento").value = cliente.statusPagamento || "Pendente";
   document.getElementById("input-ativo").value = cliente.ativo || "Ativo";
@@ -254,12 +190,10 @@ function validarFormulario() {
   const nome = document.getElementById("input-nome").value.trim();
   const cpf = limparCPF(document.getElementById("input-cpf").value);
   const telefone = limparTelefone(document.getElementById("input-telefone").value);
-  const endereco = document.getElementById("input-endereco").value.trim();
-  const email = document.getElementById("input-email").value.trim();
   const valor = converterValorParaNumero(document.getElementById("input-valor").value);
 
-  if (!nome || !cpf || !telefone || !endereco || !email) {
-    mostrarErro("Preencha todos os campos obrigatórios.");
+  if (!nome || !cpf || !telefone) {
+    mostrarErro("Preencha os campos obrigatórios: Nome, CPF e Telefone.");
     return false;
   }
 
@@ -289,6 +223,7 @@ function montarClienteDoFormulario() {
     endereco: document.getElementById("input-endereco").value.trim(),
     email: document.getElementById("input-email").value.trim(),
     valor: converterValorParaNumero(document.getElementById("input-valor").value),
+    inicio: document.getElementById("input-inicio").value,
     vencimento: document.getElementById("input-vencimento").value,
     statusPagamento: document.getElementById("input-status-pagamento").value,
     ativo: document.getElementById("input-ativo").value,
@@ -298,9 +233,7 @@ function montarClienteDoFormulario() {
 }
 
 async function salvarCliente() {
-  if (!validarFormulario()) {
-    return;
-  }
+  if (!validarFormulario()) return;
 
   const cliente = montarClienteDoFormulario();
   const cpfNovo = limparCPF(cliente.cpf);
@@ -349,9 +282,7 @@ async function excluirClientesSelecionados() {
     "Deseja excluir " + selecionados.length + " cliente(s)?"
   );
 
-  if (!confirmado) {
-    return;
-  }
+  if (!confirmado) return;
 
   clientesCache = clientesCache.filter(function (cliente) {
     return !selecionados.includes(limparCPF(cliente.cpf));
@@ -371,23 +302,16 @@ function clienteCombinaComPesquisa(cliente, termo) {
   const telefone = normalizarTexto(cliente.telefone);
   const endereco = normalizarTexto(cliente.endereco);
   const email = normalizarTexto(cliente.email);
+  const inicio = normalizarTexto(formatarInicio(cliente.inicio));
 
   return (
     nome.includes(termoTexto) ||
     email.includes(termoTexto) ||
     telefone.includes(termoTexto) ||
     endereco.includes(termoTexto) ||
+    inicio.includes(termoTexto) ||
     (termoCpf.length > 0 && cpf.includes(termoCpf))
   );
-}
-
-function escaparHtml(valor) {
-  return String(valor || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
 
 function renderizarTabela(clientes) {
@@ -397,7 +321,7 @@ function renderizarTabela(clientes) {
   if (clientes.length === 0) {
     corpoTabela.innerHTML = `
       <tr>
-        <td colspan="6" class="mensagem-vazia">Nenhum cliente cadastrado.</td>
+        <td colspan="7" class="mensagem-vazia">Nenhum cliente cadastrado.</td>
       </tr>
     `;
     return;
@@ -419,8 +343,9 @@ function renderizarTabela(clientes) {
       <td>${escaparHtml(cliente.nome)}</td>
       <td>${formatarCPF(cliente.cpf)}</td>
       <td>${formatarTelefone(cliente.telefone)}</td>
-      <td>${escaparHtml(cliente.endereco)}</td>
-      <td>${escaparHtml(cliente.email)}</td>
+      <td>${escaparHtml(cliente.endereco || "-")}</td>
+      <td>${escaparHtml(cliente.email || "-")}</td>
+      <td>${escaparHtml(formatarInicio(cliente.inicio))}</td>
     `;
 
     corpoTabela.appendChild(linha);

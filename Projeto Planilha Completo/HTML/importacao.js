@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const campoFiltro = document.getElementById("campoFiltro");
   const tabelaBody = document.getElementById("tabela-body");
   const checkboxes = document.querySelectorAll(".filtro-campo");
+
   const btnAplicarFiltro = document.getElementById("btnAplicarFiltro");
   const btnExportarExcel = document.getElementById("btnExportarExcel");
   const btnExportarJson = document.getElementById("btnExportarJson");
@@ -14,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     nome: "Nome",
     cpf: "CPF",
     valor: "Valor",
+    inicio: "Início",
     vencimento: "Vencimento",
     status: "Status",
     ativo: "Ativo/Inativo",
@@ -35,9 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function formatarCPF(cpf) {
     const n = limparCPF(cpf);
 
-    if (n.length !== 11) {
-      return n;
-    }
+    if (n.length !== 11) return n;
 
     return `${n.slice(0, 3)}.${n.slice(3, 6)}.${n.slice(6, 9)}-${n.slice(9, 11)}`;
   }
@@ -76,9 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const texto = String(data).trim();
 
-    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-      return texto;
-    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto;
 
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
       const partes = texto.split("/");
@@ -96,6 +94,22 @@ document.addEventListener("DOMContentLoaded", function () {
     return `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
   }
 
+  function formatarInicio(inicio) {
+    if (!inicio) return "-";
+
+    const texto = String(inicio).trim();
+
+    if (/^\d{4}-\d{2}$/.test(texto)) {
+      return `${texto.slice(5, 7)}/${texto.slice(0, 4)}`;
+    }
+
+    if (/^\d{2}\/\d{4}$/.test(texto)) {
+      return texto;
+    }
+
+    return "-";
+  }
+
   function criarDataLocal(data) {
     const d = converterDataParaInput(data);
 
@@ -103,91 +117,81 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const dataLocal = new Date(d + "T00:00:00");
 
-    if (Number.isNaN(dataLocal.getTime())) {
-      return null;
-    }
+    if (Number.isNaN(dataLocal.getTime())) return null;
 
     return dataLocal;
   }
 
-    function obterStatusAutomatico(cliente) {
-  const statusManual = String(cliente.statusPagamento || "").trim();
+  function obterStatusAutomatico(cliente) {
+    const statusManual = String(cliente.statusPagamento || "").trim();
 
-  if (statusManual === "Pago") {
-    return "Pago";
-  }
+    if (statusManual === "Pago") return "Pago";
 
-  const vencimento = criarDataLocal(cliente.vencimento);
-  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
+    const vencimento = criarDataLocal(cliente.vencimento);
+    const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
 
-  if (!vencimento) {
-    return "Pendente";
-  }
+    if (!vencimento) return "Pendente";
 
-  if (ultimoPagamento) {
-    if (ultimoPagamento.getTime() >= vencimento.getTime()) {
-      return "Pago";
+    if (ultimoPagamento) {
+      if (ultimoPagamento.getTime() >= vencimento.getTime()) {
+        return "Pago";
+      }
+
+      const diasEntrePagamentoEVencimento = Math.floor(
+        (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+      );
+
+      if (diasEntrePagamentoEVencimento > 31) {
+        return "Atrasado";
+      }
+
+      return "Pendente";
     }
 
-    const diasEntrePagamentoEVencimento = Math.floor(
-      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
-    );
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
 
-    if (diasEntrePagamentoEVencimento > 31) {
+    if (hoje.getTime() > vencimento.getTime()) {
       return "Atrasado";
     }
 
     return "Pendente";
   }
 
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  if (hoje.getTime() > vencimento.getTime()) {
-    return "Atrasado";
-  }
-
-  return "Pendente";
-}
-
   function exibirDias(cliente) {
-  const status = obterStatusAutomatico(cliente);
-  const vencimento = criarDataLocal(cliente.vencimento);
-  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
+    const status = obterStatusAutomatico(cliente);
+    const vencimento = criarDataLocal(cliente.vencimento);
+    const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
 
-  if (status === "Pago") {
-    return "Pago";
-  }
+    if (status === "Pago") return "Pago";
 
-  if (!vencimento) {
-    return "-";
-  }
+    if (!vencimento) return "-";
 
-  if (ultimoPagamento && ultimoPagamento.getTime() < vencimento.getTime()) {
-    const diasEntrePagamentoEVencimento = Math.floor(
-      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
-    );
+    if (ultimoPagamento && ultimoPagamento.getTime() < vencimento.getTime()) {
+      const diasEntrePagamentoEVencimento = Math.floor(
+        (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+      );
 
-    if (diasEntrePagamentoEVencimento > 31) {
-      return `${diasEntrePagamentoEVencimento} dias em atraso`;
+      if (diasEntrePagamentoEVencimento > 31) {
+        return `${diasEntrePagamentoEVencimento} dias em atraso`;
+      }
+
+      return `${diasEntrePagamentoEVencimento} dias`;
     }
 
-    return `${diasEntrePagamentoEVencimento} dias`;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const diasPeloVencimento = Math.floor(
+      (vencimento.getTime() - hoje.getTime()) / 86400000
+    );
+
+    if (status === "Atrasado") {
+      return `${Math.abs(diasPeloVencimento)} dias em atraso`;
+    }
+
+    return `${diasPeloVencimento} dias`;
   }
-
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  const diasPeloVencimento = Math.floor(
-    (vencimento.getTime() - hoje.getTime()) / 86400000
-  );
-
-  if (status === "Atrasado") {
-    return `${Math.abs(diasPeloVencimento)} dias em atraso`;
-  }
-
-  return `${diasPeloVencimento} dias`;
-}
 
   function obterColunasSelecionadas() {
     const selecionadas = Array.from(checkboxes)
@@ -198,11 +202,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return checkbox.value;
       });
 
-    if (selecionadas.length > 0) {
-      return selecionadas;
-    }
-
-    return Object.keys(mapaColunas);
+    return selecionadas.length > 0 ? selecionadas : Object.keys(mapaColunas);
   }
 
   function clienteCombinaComPesquisa(cliente, termo) {
@@ -213,10 +213,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const cpf = limparCPF(cliente.cpf);
     const telefone = limparTelefone(cliente.telefone);
     const email = normalizarTexto(cliente.email);
+    const inicio = normalizarTexto(formatarInicio(cliente.inicio));
+    const vencimento = normalizarTexto(formatarData(cliente.vencimento));
+    const status = normalizarTexto(obterStatusAutomatico(cliente));
+    const ativo = normalizarTexto(cliente.ativo);
 
     return (
       nome.includes(termoTexto) ||
       email.includes(termoTexto) ||
+      inicio.includes(termoTexto) ||
+      vencimento.includes(termoTexto) ||
+      status.includes(termoTexto) ||
+      ativo.includes(termoTexto) ||
       (termoNumero.length > 0 && cpf.includes(termoNumero)) ||
       (termoNumero.length > 0 && telefone.includes(termoNumero))
     );
@@ -227,6 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
       nome: cliente.nome || "",
       cpf: formatarCPF(cliente.cpf),
       valor: formatarMoeda(cliente.valor),
+      inicio: formatarInicio(cliente.inicio),
       vencimento: formatarData(cliente.vencimento),
       status: obterStatusAutomatico(cliente),
       ativo: cliente.ativo || "Ativo",
@@ -241,26 +250,37 @@ document.addEventListener("DOMContentLoaded", function () {
   function aplicarFiltroColunas() {
     const colunasSelecionadas = obterColunasSelecionadas();
 
-    document.querySelectorAll("[data-coluna]").forEach(function (celula) {
-      const coluna = celula.getAttribute("data-coluna");
+    document
+      .querySelectorAll("#tabelaExportacao th[data-coluna], #tabelaExportacao td[data-coluna]")
+      .forEach(function (celula) {
+        const coluna = celula.getAttribute("data-coluna");
 
-      if (colunasSelecionadas.includes(coluna)) {
-        celula.classList.remove("coluna-oculta");
-      } else {
-        celula.classList.add("coluna-oculta");
-      }
-    });
+        if (colunasSelecionadas.includes(coluna)) {
+          celula.classList.remove("coluna-oculta");
+        } else {
+          celula.classList.add("coluna-oculta");
+        }
+      });
+
+    const filtroBox = document.querySelector(".filtro-box");
+
+    if (filtroBox) {
+      filtroBox.classList.add("filtro-fechado-temporario");
+
+      setTimeout(function () {
+        filtroBox.classList.remove("filtro-fechado-temporario");
+      }, 300);
+    }
   }
 
   function renderizarTabela(lista) {
     clientesFiltradosAtuais = lista.slice();
-
     tabelaBody.innerHTML = "";
 
     if (lista.length === 0) {
       tabelaBody.innerHTML = `
         <tr>
-          <td colspan="11" class="mensagem-vazia">Nenhum cliente encontrado.</td>
+          <td colspan="12" class="mensagem-vazia">Nenhum cliente encontrado.</td>
         </tr>
       `;
       return;
@@ -274,6 +294,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <td data-coluna="nome">${dados.nome}</td>
         <td data-coluna="cpf">${dados.cpf}</td>
         <td data-coluna="valor">${dados.valor}</td>
+        <td data-coluna="inicio">${dados.inicio}</td>
         <td data-coluna="vencimento">${dados.vencimento}</td>
         <td data-coluna="status">${dados.status}</td>
         <td data-coluna="ativo">${dados.ativo}</td>
@@ -291,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function aplicarPesquisa() {
-    const termo = campoFiltro.value.trim();
+    const termo = campoFiltro ? campoFiltro.value.trim() : "";
 
     if (!termo) {
       renderizarTabela(clientesCache);
@@ -307,9 +328,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function carregarClientes() {
     const clientes = await obterClientes();
-
     clientesCache = Array.isArray(clientes) ? clientes : [];
-
     aplicarPesquisa();
   }
 
@@ -329,7 +348,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function baixarArquivo(nomeArquivo, conteudo, tipo) {
-    const blob = new Blob([conteudo], { type: tipo });
+    const blob = new Blob(["\uFEFF" + conteudo], { type: tipo });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
@@ -356,11 +375,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const dados = obterDadosExportacao();
 
     if (dados.length === 0) {
-      baixarArquivo(
-        "clientes.csv",
-        "Nenhum dado encontrado.",
-        "text/csv;charset=utf-8"
-      );
+      baixarArquivo("clientes.csv", "Nenhum dado encontrado.", "text/csv;charset=utf-8");
       return;
     }
 
@@ -382,14 +397,77 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function exportarExcel() {
-    exportarCsv();
+    const dados = obterDadosExportacao();
+
+    if (dados.length === 0) {
+      baixarArquivo(
+        "clientes.xls",
+        "Nenhum dado encontrado.",
+        "application/vnd.ms-excel;charset=utf-8"
+      );
+      return;
+    }
+
+    const colunas = Object.keys(dados[0]);
+
+    let html = `
+      <table border="1">
+        <thead>
+          <tr>
+            ${colunas.map(function (coluna) {
+              return `<th>${coluna}</th>`;
+            }).join("")}
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    dados.forEach(function (linha) {
+      html += `
+        <tr>
+          ${colunas.map(function (coluna) {
+            return `<td>${String(linha[coluna] || "")}</td>`;
+          }).join("")}
+        </tr>
+      `;
+    });
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+    baixarArquivo(
+      "clientes.xls",
+      html,
+      "application/vnd.ms-excel;charset=utf-8"
+    );
   }
 
-  campoFiltro.addEventListener("input", aplicarPesquisa);
+  if (campoFiltro) {
+    campoFiltro.addEventListener("input", aplicarPesquisa);
+
+    campoFiltro.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        aplicarPesquisa();
+      }
+    });
+  }
 
   if (btnAplicarFiltro) {
-    btnAplicarFiltro.addEventListener("click", aplicarFiltroColunas);
+    btnAplicarFiltro.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      aplicarFiltroColunas();
+    });
   }
+
+  checkboxes.forEach(function (checkbox) {
+    checkbox.addEventListener("change", function () {
+      // Só marca/desmarca. A aplicação final fica no botão Aplicar.
+    });
+  });
 
   if (btnExportarJson) {
     btnExportarJson.addEventListener("click", exportarJson);

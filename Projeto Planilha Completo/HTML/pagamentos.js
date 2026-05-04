@@ -75,6 +75,22 @@ document.addEventListener("DOMContentLoaded", function () {
     return `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
   }
 
+  function formatarInicio(inicio) {
+    if (!inicio) return "-";
+
+    const texto = String(inicio).trim();
+
+    if (/^\d{4}-\d{2}$/.test(texto)) {
+      return `${texto.slice(5, 7)}/${texto.slice(0, 4)}`;
+    }
+
+    if (/^\d{2}\/\d{4}$/.test(texto)) {
+      return texto;
+    }
+
+    return "-";
+  }
+
   function criarDataLocal(data) {
     const d = converterDataParaInput(data);
     if (!d) return null;
@@ -86,83 +102,83 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function obterStatusAutomatico(cliente) {
-  const statusManual = String(cliente.statusPagamento || "").trim();
+    const statusManual = String(cliente.statusPagamento || "").trim();
 
-  if (statusManual === "Pago") {
-    return "Pago";
-  }
-
-  const vencimento = criarDataLocal(cliente.vencimento);
-  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
-
-  if (!vencimento) {
-    return "Pendente";
-  }
-
-  if (ultimoPagamento) {
-    if (ultimoPagamento.getTime() >= vencimento.getTime()) {
+    if (statusManual === "Pago") {
       return "Pago";
     }
 
-    const diasEntrePagamentoEVencimento = Math.floor(
-      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
-    );
+    const vencimento = criarDataLocal(cliente.vencimento);
+    const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
 
-    if (diasEntrePagamentoEVencimento > 31) {
+    if (!vencimento) {
+      return "Pendente";
+    }
+
+    if (ultimoPagamento) {
+      if (ultimoPagamento.getTime() >= vencimento.getTime()) {
+        return "Pago";
+      }
+
+      const diasEntrePagamentoEVencimento = Math.floor(
+        (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+      );
+
+      if (diasEntrePagamentoEVencimento > 31) {
+        return "Atrasado";
+      }
+
+      return "Pendente";
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    if (hoje.getTime() > vencimento.getTime()) {
       return "Atrasado";
     }
 
     return "Pendente";
   }
 
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  if (hoje.getTime() > vencimento.getTime()) {
-    return "Atrasado";
-  }
-
-  return "Pendente";
-}
-
   function exibirDias(cliente) {
-  const status = obterStatusAutomatico(cliente);
-  const vencimento = criarDataLocal(cliente.vencimento);
-  const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
+    const status = obterStatusAutomatico(cliente);
+    const vencimento = criarDataLocal(cliente.vencimento);
+    const ultimoPagamento = criarDataLocal(cliente.ultimoPagamento);
 
-  if (status === "Pago") {
-    return "Pago";
-  }
-
-  if (!vencimento) {
-    return "-";
-  }
-
-  if (ultimoPagamento && ultimoPagamento.getTime() < vencimento.getTime()) {
-    const diasEntrePagamentoEVencimento = Math.floor(
-      (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
-    );
-
-    if (diasEntrePagamentoEVencimento > 31) {
-      return `${diasEntrePagamentoEVencimento} dias em atraso`;
+    if (status === "Pago") {
+      return "Pago";
     }
 
-    return `${diasEntrePagamentoEVencimento} dias`;
+    if (!vencimento) {
+      return "-";
+    }
+
+    if (ultimoPagamento && ultimoPagamento.getTime() < vencimento.getTime()) {
+      const diasEntrePagamentoEVencimento = Math.floor(
+        (vencimento.getTime() - ultimoPagamento.getTime()) / 86400000
+      );
+
+      if (diasEntrePagamentoEVencimento > 31) {
+        return `${diasEntrePagamentoEVencimento} dias em atraso`;
+      }
+
+      return `${diasEntrePagamentoEVencimento} dias`;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const diasPeloVencimento = Math.floor(
+      (vencimento.getTime() - hoje.getTime()) / 86400000
+    );
+
+    if (status === "Atrasado") {
+      return `${Math.abs(diasPeloVencimento)} dias em atraso`;
+    }
+
+    return `${diasPeloVencimento} dias`;
   }
-
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-
-  const diasPeloVencimento = Math.floor(
-    (vencimento.getTime() - hoje.getTime()) / 86400000
-  );
-
-  if (status === "Atrasado") {
-    return `${Math.abs(diasPeloVencimento)} dias em atraso`;
-  }
-
-  return `${diasPeloVencimento} dias`;
-}
 
   function ordenarClientesPorNome(clientes) {
     return clientes.slice().sort(function (a, b) {
@@ -173,12 +189,14 @@ document.addEventListener("DOMContentLoaded", function () {
   function clienteCombinaComPesquisa(cliente, termo) {
     const termoTexto = normalizarTexto(termo);
     const termoCpf = limparCPF(termo);
+    const inicio = normalizarTexto(formatarInicio(cliente.inicio));
 
     const nome = normalizarTexto(cliente.nome);
     const cpf = limparCPF(cliente.cpf);
 
     return (
       nome.includes(termoTexto) ||
+      inicio.includes(termoTexto) ||
       (termoCpf.length > 0 && cpf.includes(termoCpf))
     );
   }
@@ -200,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (lista.length === 0) {
       tabelaBody.innerHTML = `
         <tr>
-          <td colspan="7" class="mensagem-vazia">
+          <td colspan="8" class="mensagem-vazia">
             Nenhum pagamento cadastrado.
           </td>
         </tr>
@@ -223,6 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <td>${cliente.nome || ""}</td>
         <td>${formatarCPF(cliente.cpf)}</td>
         <td>${formatarMoeda(cliente.valor)}</td>
+        <td>${formatarInicio(cliente.inicio)}</td>
         <td>${formatarData(cliente.vencimento)}</td>
         <td>${obterStatusAutomatico(cliente)}</td>
         <td>${exibirDias(cliente)}</td>
